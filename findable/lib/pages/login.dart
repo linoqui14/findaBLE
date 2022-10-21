@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:findable/my_widgets/custom_text_button.dart';
 import 'package:findable/my_widgets/custom_textfield.dart';
 import 'package:findable/my_widgets/press_on_text.dart';
@@ -5,14 +7,13 @@ import 'package:findable/pages/user_page.dart';
 import 'package:findable/tools/variables.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-
+import 'package:device_info_plus/device_info_plus.dart';
 import '../models/users.dart';
 import '../my_widgets/pressable.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key, required this.title}) : super(key: key);
+  const LoginPage({Key? key,}) : super(key: key);
 
-  final String title;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -22,8 +23,37 @@ class _LoginPageState extends State<LoginPage> {
 
   TextEditingController username = TextEditingController();
   TextEditingController password = TextEditingController();
+  Future<String?> _getId() async {
+    var deviceInfo = DeviceInfoPlugin();
+    if (Platform.isIOS) { // import 'dart:io'
+      var iosDeviceInfo = await deviceInfo.iosInfo;
+      return iosDeviceInfo.identifierForVendor; // unique ID on iOS
+    } else if(Platform.isAndroid) {
+      var androidDeviceInfo = await deviceInfo.androidInfo;
+      return androidDeviceInfo.androidId; // unique ID on Android
+    }
+  }
 
+  @override
+  void initState() {
+    _getId().then((value) {
+      DBController.getCurrentLogin(deviceID: value).then((res) {
+        if(res==null)return;
+        User user = res;
+        print(user.isLogin);
+        if(user.isLogin){
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => UserPage(user: user,)),
+                (Route<dynamic> route) => false,
+          );
+        }
 
+      });
+    });
+
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,14 +95,23 @@ class _LoginPageState extends State<LoginPage> {
                           color: Colors.blue,
                           onPressed: (){
                             if(password.text.isNotEmpty&&username.text.isNotEmpty){
-                              DBController.getUser(username: username.text, password: password.text).then((user) {
-                                if(user==null)return;
-                                Navigator.pushAndRemoveUntil(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => UserPage(user: user,)),
-                                      (Route<dynamic> route) => false,
-                                );
+                              _getId().then((deviceID){
+                                DBController.getUser(username: username.text, password: password.text,deviceID: deviceID!).then((user) {
+                                  if(user==null)return;
+                                  user.isLogin = true;
+                                  DBController.upsertUser(user: user).then((updatedUser){
+                                    print(updatedUser!.deviceID);
+                                    if(updatedUser==null) return;
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => UserPage(user: updatedUser,)),
+                                          (Route<dynamic> route) => false,
+                                    );
+                                  });
+
+                                });
                               });
+
                             }
 
                           },
@@ -98,7 +137,7 @@ class _LoginPageState extends State<LoginPage> {
                                 TextEditingController username = TextEditingController();
                                 TextEditingController password = TextEditingController();
                                 bool hidePassword = true;
-                                Tools().basicDialog(
+                                Tools.basicDialog(
                                     context: context,
                                     statefulBuilder: StatefulBuilder(
                                         builder: (context,setStateRegistration){
@@ -153,39 +192,42 @@ class _LoginPageState extends State<LoginPage> {
                                                         text: "Register",
                                                         onPressed: (){
                                                           if(password.text.isNotEmpty&&username.text.isNotEmpty){
-                                                            DBController.createUser(user: User(name: username.text,password: password.text)).then((value) {
-                                                              if(value){
-                                                                Navigator.of(
-                                                                    context)
-                                                                    .pop();
-                                                                Fluttertoast
-                                                                    .showToast(
-                                                                    msg: "Successfully Register",
-                                                                    toastLength: Toast
-                                                                        .LENGTH_SHORT,
-                                                                    gravity: ToastGravity
-                                                                        .BOTTOM,
-                                                                    timeInSecForIosWeb: 1,
-                                                                    backgroundColor: MyColors.darkBlue,
-                                                                    textColor: Colors.white,
-                                                                    fontSize: 16.0
-                                                                );
-                                                              }
-                                                              else{
-                                                                Fluttertoast
-                                                                    .showToast(
-                                                                    msg: "Registration Failed",
-                                                                    toastLength: Toast
-                                                                        .LENGTH_SHORT,
-                                                                    gravity: ToastGravity
-                                                                        .BOTTOM,
-                                                                    timeInSecForIosWeb: 1,
-                                                                    backgroundColor: MyColors.red,
-                                                                    textColor: Colors.white,
-                                                                    fontSize: 16.0
-                                                                );
-                                                              }
+                                                            _getId().then((value) {
+                                                              DBController.upsertUser(user: User(name: username.text,password: password.text,deviceID: value!)).then((value) {
+                                                                if(value!=null){
+                                                                  Navigator.of(
+                                                                      context)
+                                                                      .pop();
+                                                                  Fluttertoast
+                                                                      .showToast(
+                                                                      msg: "Successfully Register",
+                                                                      toastLength: Toast
+                                                                          .LENGTH_SHORT,
+                                                                      gravity: ToastGravity
+                                                                          .BOTTOM,
+                                                                      timeInSecForIosWeb: 1,
+                                                                      backgroundColor: MyColors.darkBlue,
+                                                                      textColor: Colors.white,
+                                                                      fontSize: 16.0
+                                                                  );
+                                                                }
+                                                                else{
+                                                                  Fluttertoast
+                                                                      .showToast(
+                                                                      msg: "Registration Failed",
+                                                                      toastLength: Toast
+                                                                          .LENGTH_SHORT,
+                                                                      gravity: ToastGravity
+                                                                          .BOTTOM,
+                                                                      timeInSecForIosWeb: 1,
+                                                                      backgroundColor: MyColors.red,
+                                                                      textColor: Colors.white,
+                                                                      fontSize: 16.0
+                                                                  );
+                                                                }
+                                                              });
                                                             });
+
                                                           }
                                                         },
                                                       )

@@ -12,8 +12,9 @@ class CustomTextButton extends StatelessWidget{
         Key? key,
         this.onPressed,
         this.text="Text Here",
-        this.rTR=10,this.rTl=10,
-        this.rBR=10,this.rBL=10,
+        this.rTopRight=10,this.rTopLeft=10,
+        this.rBottomRight=10,this.rBottomLeft=10,
+        this.rAll,
         this.color=MyColors.skyBlueDead,
         this.width = 100,
         this.height = 30,
@@ -23,7 +24,11 @@ class CustomTextButton extends StatelessWidget{
 
   final Function()? onPressed;
   final String text;
-  final double rTl,rTR,rBL,rBR;
+  final double rTopRight;
+  final double rTopLeft ;
+  final double rBottomRight;
+  final double rBottomLeft;
+  final double? rAll;
   final Color color;
   final double width;
   final double height;
@@ -50,13 +55,12 @@ class CustomTextButton extends StatelessWidget{
             backgroundColor: MaterialStateProperty.all(color),
             shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                 RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(rBL),
-                    bottomRight:  Radius.circular(rBR),
-                    topLeft: Radius.circular(rTl),
-                    topRight:  Radius.circular(rTR),
-
-                  ),
+                    borderRadius: rAll!=null?BorderRadius.all(Radius.circular(rAll!)):BorderRadius.only(
+                      bottomRight: Radius.circular(rBottomRight),
+                      bottomLeft: Radius.circular(rBottomLeft),
+                      topRight: Radius.circular(rTopRight),
+                      topLeft: Radius.circular(rTopLeft),
+                    )
 
                 )
             )

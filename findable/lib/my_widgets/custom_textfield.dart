@@ -25,7 +25,10 @@ class CustomTextField extends StatefulWidget{
     this.suffix,
     this.keyBoardType,
     this.onChange,
-    this.alignment
+    this.alignment,
+    this.rAll,
+    this.filledColor,
+    this.borderWidth = 1
   }) : super(key: key);
 
   final String hint;
@@ -39,10 +42,13 @@ class CustomTextField extends StatefulWidget{
   double rTopLeft ;
   double rBottomRight;
   double rBottomLeft;
+  double? rAll;
   Color color;
+  Color? filledColor;
   bool filled;
   bool enable;
   bool readonly;
+  double borderWidth;
   TextEditingController controller;
   TextAlign? alignment;
 
@@ -71,24 +77,26 @@ class _CustomTextFieldState extends State<CustomTextField>{
         onChanged: widget.onChange,
         style: TextStyle(
 
-          color: widget.color,
+          color: widget.color.withAlpha(widget.enable?255:50),
 
         ),
         decoration: InputDecoration(
+            fillColor: widget.filledColor,
 
             suffixIcon:widget.suffix,
-            prefixIcon: widget.icon != null?Icon(widget.icon,color: widget.color,size: 20,):null,
+            prefixIcon: widget.icon != null?Icon(widget.icon,color: widget.color.withAlpha(widget.enable?255:50),size: 20,):null,
             filled: widget.filled,
             contentPadding: EdgeInsets.only(bottom: 0,top: 10,left: 10,right: 10),
             labelText: widget.hint,
             labelStyle: TextStyle(
-              color: widget.color,
+              color: widget.color.withAlpha(widget.enable?255:50),
             ),
             border: OutlineInputBorder(
                 borderSide: BorderSide(
-                    color:  widget.color
+                    width: widget.borderWidth,
+                    color:  widget.color.withAlpha(widget.enable?255:50)
                 ),
-                borderRadius: BorderRadius.only(
+                borderRadius: widget.rAll!=null?BorderRadius.all(Radius.circular(widget.rAll!)):BorderRadius.only(
                   bottomRight: Radius.circular(widget.rBottomRight),
                   bottomLeft: Radius.circular(widget.rBottomLeft),
                   topRight: Radius.circular(widget.rTopRight),
@@ -97,9 +105,10 @@ class _CustomTextFieldState extends State<CustomTextField>{
             ),
             focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(
-                    color:  widget.color
+                    width: widget.borderWidth,
+                    color:  widget.color.withAlpha(widget.enable?255:50)
                 ),
-                borderRadius: BorderRadius.only(
+                borderRadius:  widget.rAll!=null?BorderRadius.all(Radius.circular(widget.rAll!)):BorderRadius.only(
                   bottomRight: Radius.circular(widget.rBottomRight),
                   bottomLeft: Radius.circular(widget.rBottomLeft),
                   topRight: Radius.circular(widget.rTopRight),
@@ -108,9 +117,10 @@ class _CustomTextFieldState extends State<CustomTextField>{
             ),
             enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(
-                    color: widget.color.withAlpha(100)
+                    width: widget.borderWidth,
+                    color: widget.color.withAlpha(widget.enable?255:50)
                 ),
-                borderRadius: BorderRadius.only(
+                borderRadius:  widget.rAll!=null?BorderRadius.all(Radius.circular(widget.rAll!)):BorderRadius.only(
                   bottomRight: Radius.circular(widget.rBottomRight),
                   bottomLeft: Radius.circular(widget.rBottomLeft),
                   topRight: Radius.circular(widget.rTopRight),
@@ -119,9 +129,10 @@ class _CustomTextFieldState extends State<CustomTextField>{
             ),
             disabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(
-                    color: widget.color.withAlpha(100)
+                    width: widget.borderWidth,
+                    color: widget.color.withAlpha(50)
                 ),
-                borderRadius: BorderRadius.only(
+                borderRadius:  widget.rAll!=null?BorderRadius.all(Radius.circular(widget.rAll!)):BorderRadius.only(
                   bottomRight: Radius.circular(widget.rBottomRight),
                   bottomLeft: Radius.circular(widget.rBottomLeft),
                   topRight: Radius.circular(widget.rTopRight),

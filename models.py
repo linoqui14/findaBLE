@@ -1,3 +1,4 @@
+from pickle import FALSE
 import re
 from tinydb import TinyDB,where
 
@@ -5,34 +6,22 @@ db = TinyDB('db.json')
 userDB = db.table('users')
 
 class User:
-    def __init__(self,name,password,deviceID):
-        self.isLogin = False
-        userObj = userDB.search(where('name')==name)
+    def __init__(self,name,password,deviceID,id='n/a',isLogin = False):
+        userObj = userDB.search(where('id')==int(id))
+
+        self.isLogin = isLogin
+        self.id = len(userDB.all())
+        self.name = name
+        self.password = password
+        self.isNew = True
+        self.deviceID = deviceID
+
+        # self.isLogin = False
+
         if  userObj!=[] :
             userObj = userObj[0]
-            if userObj['password']==password :
-                self.id  = int(userObj['id'])
-                self.name = userObj['name']
-                self.password = userObj['password']
-                self.deviceID = userObj['deviceID']
-
-                self.isNew = False
-            elif name != userObj['name']:
-                self.name = name
-                self.password = password
-                self.id = len(userDB.all())
-                self.isNew = True
-                self.deviceID = deviceID
-                self.isLogin = False
-            else:
-                return
-        else:
-            self.name = name
-            self.password = password
-            self.id = len(userDB.all())
-            self.isNew = True
-            self.deviceID = deviceID
-            self.isLogin = False
+            self.id  = int(userObj['id'])
+            self.isNew = False
         
 
     def toJson(self):
@@ -46,8 +35,8 @@ class User:
 
     def upsertUser(self):
         if not self.isNew:
-            userDB.update({'name':self.name},where('id') == self.id)
-            return 1
+            userDB.update(self.toJson(),where('id') == self.id)
+            return self.toJson()
         userDB.insert(self.toJson())
         
     def getUser(self):

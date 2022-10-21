@@ -29,10 +29,10 @@ class DBController{
     return int.parse(res.body)==1?true:false;
   }
 
-  static Future<User?> getUser({required String username,required String password}) async{
+  static Future<User?> getUser({required String username,required String password,required String deviceID}) async{
     String phpurl = "http://$ip:5000/get_user/$code";
-    var res = await http.post(Uri.parse(phpurl),body: {'username':username,'password':password});
-    print(res.body);
+    var res = await http.post(Uri.parse(phpurl),body: {'username':username,'password':password,'deviceID':deviceID});
+    // print(res.body);
     try {
       User user = User.toObject(json.decode(res.body));
       return user;
@@ -41,13 +41,29 @@ class DBController{
       return null;
     }
   }
+  static Future<User?> getCurrentLogin({required deviceID}) async{
+    String phpurl = "http://$ip:5000/get_current_login/$code";
+    var res = await http.post(Uri.parse(phpurl),body: {'deviceID':deviceID,});
+    print(res.body);
+    try {
+      User user = User.toObject(json.decode(res.body)[0]);
+      return user;
+    }
+    catch(e){
+      return null;
+    }
+  }
 
-  static Future<bool> createUser({required User user}) async{
-    String phpurl = "http://$ip:5000/create_user/$code";
+  static Future<User?> upsertUser({required User user}) async{
+    String phpurl = "http://$ip:5000/upsert_user/$code";
     var res = await http.post(Uri.parse(phpurl),body: user.toJson());
-
-
-    return res.body.split("{").length>1?true:false;
+    try {
+      User user = User.toObject(json.decode(res.body));
+      return user;
+    }
+    catch(e){
+      return null;
+    }
   }
 
 
@@ -67,7 +83,7 @@ class Tools{
   //   await file.writeAsBytes(bytes);
   //   return file;
   // }
-  Future<void> basicDialog({
+  static Future<void> basicDialog({
     required BuildContext context,
     required StatefulBuilder statefulBuilder
   }) async {
