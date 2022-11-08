@@ -21,8 +21,6 @@ def upsertUser(codep):
     id = request.form['id']
     isLogin = True if request.form['isLogin']=='true' else False
     user = User(name=name,password=password,deviceID=deviceID,id=id,isLogin=isLogin)
-
-    
     return user.upsertUser()
     
    

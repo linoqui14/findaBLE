@@ -7,6 +7,8 @@ userDB = db.table('users')
 
 class User:
     def __init__(self,name,password,deviceID,id='n/a',isLogin = False):
+        if id =='null':
+            id = '12341231241241233123'
         userObj = userDB.search(where('id')==int(id))
 
         self.isLogin = isLogin
@@ -15,13 +17,14 @@ class User:
         self.password = password
         self.isNew = True
         self.deviceID = deviceID
-
+       
         # self.isLogin = False
 
         if  userObj!=[] :
             userObj = userObj[0]
             self.id  = int(userObj['id'])
             self.isNew = False
+        
         
 
     def toJson(self):
@@ -38,6 +41,7 @@ class User:
             userDB.update(self.toJson(),where('id') == self.id)
             return self.toJson()
         userDB.insert(self.toJson())
+        return self.toJson()
         
     def getUser(self):
         if self.isNew:
