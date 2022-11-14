@@ -44,9 +44,9 @@ class DBController{
   static Future<User?> getCurrentLogin({required deviceID}) async{
     String phpurl = "http://$ip:5000/get_current_login/$code";
     var res = await http.post(Uri.parse(phpurl),body: {'deviceID':deviceID,});
-    print(res.body);
+
     try {
-      User user = User.toObject(json.decode(res.body)[0]);
+      User user = User.toObject(json.decode(res.body));
       return user;
     }
     catch(e){

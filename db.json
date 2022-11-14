@@ -1,1 +1,1 @@
-{"users": {"1": {"id": 0, "name": "findme1", "password": "221211", "deviceID": "", "isLogin": false}, "2": {"id": 1, "name": "findme", "password": "22121", "deviceID": "78171cc5722a1c33", "isLogin": false}}}
+{"tags": {"1": {"id": "ff:ff:10:74:09:d8", "name": "iTAG", "distance": "0.33"}, "2": {"id": "ff:ff:10:74:3b:fb", "name": "iTAG", "distance": "-40"}}, "users": {"1": {"id": 0, "name": "akiko", "password": "123123", "deviceID": "34708b3877e8c72c", "isLogin": true}}}

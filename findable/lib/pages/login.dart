@@ -36,8 +36,11 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void initState() {
+    
     _getId().then((value) {
+
       DBController.getCurrentLogin(deviceID: value).then((res) {
+
         if(res==null)return;
         User user = res;
         print(user.isLogin);
@@ -100,7 +103,7 @@ class _LoginPageState extends State<LoginPage> {
                                   if(user==null)return;
                                   user.isLogin = true;
                                   DBController.upsertUser(user: user).then((updatedUser){
-                                    print(updatedUser!.deviceID);
+                                    // print(updatedUser!.deviceID);
                                     if(updatedUser==null) return;
                                     Navigator.pushAndRemoveUntil(
                                       context,

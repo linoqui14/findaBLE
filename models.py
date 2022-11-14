@@ -4,6 +4,7 @@ from tinydb import TinyDB,where
 
 db = TinyDB('db.json')
 userDB = db.table('users')
+tagDB = db.table('tags')
 
 class User:
     def __init__(self,name,password,deviceID,id='n/a',isLogin = False):
@@ -48,7 +49,33 @@ class User:
             return {}
         else: return self.toJson()
     
+class Tag:
+    def __init__(self,name,id,distance=0):
+        tagObj = tagDB.search(where('id')==id)
+        self.id = id
+        self.name = name
+        self.isNew = True
+        self.distance = distance
+       
+        # self.isLogin = False
 
+        if  tagObj!=[] :
+            tagObj = tagObj[0]
+            self.id  = tagObj['id']
+            self.isNew = False
+    def toJson(self):
+        return {
+            'id':self.id,
+            'name':self.name,
+            'distance':self.distance,
+        }
+
+    def upsertUser(self):
+        if not self.isNew:
+            tagDB.update(self.toJson(),where('id') == self.id)
+            return self.toJson()
+        tagDB.insert(self.toJson())
+        return self.toJson()
 
 class Detector:
     def __init__(self,id,name,distance,time,status):
