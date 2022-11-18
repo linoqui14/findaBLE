@@ -5,7 +5,7 @@ from tinydb import TinyDB,where
 db = TinyDB('db.json')
 userDB = db.table('users')
 tagDB = db.table('tags')
-
+esp32PairDB = db.table('esp32')
 class User:
     def __init__(self,name,password,deviceID,id='n/a',isLogin = False):
         if id =='null':
@@ -74,15 +74,39 @@ class Tag:
 
     def upsertUser(self):
         if not self.isNew:
-            tagDB.update(self.toJson(),where('id') == self.id)
+            esp32PairDB.update(self.toJson(),where('id') == self.id)
             return self.toJson()
-        tagDB.insert(self.toJson())
+        esp32PairDB.insert(self.toJson())
         return self.toJson()
 
 
 class ESP32Pair:
-    
+    def __init__(self,id,distance,scanMode):
+            esp32PairObj = esp32PairDB.search(where('id')==id)
+            self.id = id
+            self.isNew = True
+            self.distance = distance
+            self.scanMode = scanMode
 
+            if  esp32PairObj!=[] :
+                esp32PairObj = esp32PairObj[0]
+                self.id  = esp32PairObj['id']
+                self.isNew = False
+
+    def upsert(self):
+        if not self.isNew:
+            tagDB.update(self.toJson(),where('id') == self.id)
+            return self.toJson()
+        tagDB.insert(self.toJson())
+        return self.toJson()  
+
+    def toJson(self):
+        return {
+            'id':self.id,
+            'distance':self.distance,
+            'scanMode':self.scanMode,
+        }
+    
 class Detector:
     def __init__(self,id,name,distance,time,status):
         self.name = name
