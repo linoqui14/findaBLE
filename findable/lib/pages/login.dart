@@ -36,7 +36,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void initState() {
-    
+
     _getId().then((value) {
 
       DBController.getCurrentLogin(deviceID: value).then((res) {

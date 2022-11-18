@@ -8,6 +8,8 @@
 #include <HTTPClient.h>
 #include <EEPROM.h>
 
+#define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 #define EEPROM_SIZE 1
 
 const char* ssid = "waypaynimama221x-far";
@@ -17,8 +19,8 @@ String serverName = "http://192.168.1.6:5000/";
 TaskHandle_t requestTask;
 int scanTime = 5; //In seconds
 BLEScan* pBLEScan;
-
-
+int DID;
+int pairID = 1011;
 
 void RequestTask( void * parameter) {
   int count  = 0;
@@ -27,6 +29,7 @@ void RequestTask( void * parameter) {
       if(count==0){
         count = 1;       
       }else{count = 0;}
+      Serial.println("Device ID: "+String(DID));
     }
     
     delay(1000);
@@ -50,9 +53,10 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
    void onResult(BLEAdvertisedDevice advertisedDevice) {
       
       // if(advertisedDevice.toString().find_first_of("iTAG            ")==5){
-          // Serial.printf("Advertised Device: %s", advertisedDevice.toString().c_str());
+          // Serial.println("Advertised Device: %s", advertisedDevice.toString().c_str());
           // Serial.println(advertisedDevice.getName().compare("iTAG            "));
-          if(advertisedDevice.getName().compare("iTAG            ")==0){
+          //  Serial.println(advertisedDevice.getName().c_str());
+          if(advertisedDevice.getName().compare("iTAG            ")==0||advertisedDevice.getName().compare("ESP32-11")==0){
             int rssi = advertisedDevice.getRSSI();
             Serial.println(advertisedDevice.getName().c_str());
             Serial.println(advertisedDevice.getAddress().toString().c_str());
@@ -81,25 +85,35 @@ void setup() {
   Serial.begin(115200);
   
   EEPROM.begin(EEPROM_SIZE);
-  int DID =  EEPROM.read(0);
+  DID =  EEPROM.read(0);
   if(DID==255){
     EEPROM.write(0, 11);
     EEPROM.commit();
   }
   if(DID==11){
-    BLE.setLocalName("MyArduinoDevice");
+    BLEDevice::init("ESP32-11");
+    BLEServer *pServer = BLEDevice::createServer();
+    BLEService *pService = pServer->createService(SERVICE_UUID);
+    BLECharacteristic *pCharacteristic = pService->createCharacteristic(
+                                     CHARACTERISTIC_UUID,
+                                     BLECharacteristic::PROPERTY_READ |
+                                     BLECharacteristic::PROPERTY_WRITE
+                                     );
+    pCharacteristic->setValue("Hello World says Neil");
+    BLEAdvertising *pAdvertising = pServer->getAdvertising();
+    pAdvertising->start();
+  }else{
+    Serial.println("Scanning...");
+    
+    BLEDevice::init("");
+    pBLEScan = BLEDevice::getScan(); //create new scan
+    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+    pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+    pBLEScan->setInterval(100);
+    pBLEScan->setWindow(99);  // less or equal setInterval value
   }  
-  Serial.println(DID);
-
+  // initWiFi();
   
-  Serial.println("Scanning...");
-  initWiFi();
-  BLEDevice::init("");
-  pBLEScan = BLEDevice::getScan(); //create new scan
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-  pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
-  pBLEScan->setInterval(100);
-  pBLEScan->setWindow(99);  // less or equal setInterval value
 
   xTaskCreatePinnedToCore(
       RequestTask, /* Function to implement the task */
@@ -113,11 +127,15 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  BLEScanResults foundDevices = pBLEScan->start(scanTime, false);
-  Serial.print("Devices found: ");
-  Serial.println(foundDevices.getCount());
-  Serial.println("Scan done!");
-  pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
+  if(DID!=11){
+    
+// put your main code here, to run repeatedly:
+    BLEScanResults foundDevices = pBLEScan->start(scanTime, false);
+    Serial.print("Devices found: ");
+    Serial.println(foundDevices.getCount());
+    Serial.println("Scan done!");
+    pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory  
+  }
+  
   delay(2000);
 }

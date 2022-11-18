@@ -50,12 +50,13 @@ class User:
         else: return self.toJson()
     
 class Tag:
-    def __init__(self,name,id,distance=0):
+    def __init__(self,name,id,distance_left,distance_right):
         tagObj = tagDB.search(where('id')==id)
         self.id = id
         self.name = name
         self.isNew = True
-        self.distance = distance
+        self.distance_left = distance_left
+        self.distance_right = distance_right
        
         # self.isLogin = False
 
@@ -67,7 +68,8 @@ class Tag:
         return {
             'id':self.id,
             'name':self.name,
-            'distance':self.distance,
+            'distance_left':self.distance_left,
+            'distance_right':self.distance_right,
         }
 
     def upsertUser(self):
@@ -76,6 +78,10 @@ class Tag:
             return self.toJson()
         tagDB.insert(self.toJson())
         return self.toJson()
+
+
+class ESP32Pair:
+    
 
 class Detector:
     def __init__(self,id,name,distance,time,status):
