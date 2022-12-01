@@ -54,7 +54,6 @@ void RequestTask( void * parameter) {
                
 
         if(status == 49&&DID==11){
-          Serial.println("ASdasddasd");
           JSONVar value = myObject["mode"];   
           String strValue =   JSON.stringify(value);
           mode = int(strValue[0]);
@@ -83,10 +82,9 @@ void RequestTask( void * parameter) {
       
       if(mode==1&&DID==10){
         HTTPClient http;
-        String serverPath = serverName+"/upsert_esp32/"+pairID+"/"+pairDistance+"/na/"+"na";
+        String serverPath = serverName+"/upsert_esp32/"+pairID+"/"+pairDistance+"/0/"+mode;
         http.begin(serverPath.c_str()); 
         int httpResponseCode = http.GET();
-        
       }
     }
     
@@ -122,7 +120,6 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
                      
             if(advertisedDevice.getName().compare("ESP32-11")==0){
               pairDistance = pow(10, (-77 - rssi)/(10*2.5));
-              Serial.println(pairDistance);
               // Serial.print("Distance: ");
               // Serial.println(pairDistance); 
             }
@@ -130,17 +127,10 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
               HTTPClient http;
               String name = advertisedDevice.getName().c_str();
               name.replace(" ","");
-              String position = "left";
-              if(DID==11){
-                position = "right";
-              }
-              if(mode!=1){
-                String serverPath = serverName + "upsert_tag/"+advertisedDevice.getAddress().toString().c_str()+"/"+name+"/"+String(pow(10, (-77 - rssi)/(10*2.5)))+"-"+position;
-                Serial.println(serverPath);     
-                http.begin(serverPath.c_str());
-                int httpResponseCode = http.GET();
-              }
-              
+              String serverPath = serverName + "upsert_tag/"+advertisedDevice.getAddress().toString().c_str()+"/"+name+"/"+String(rssi);
+              Serial.println(serverPath);     
+              http.begin(serverPath.c_str());
+              int httpResponseCode = http.GET();
             }         
           }
           
@@ -178,7 +168,7 @@ void setup() {
       break;
     } 
          
-    delay(2000);
+    delay(1000);
   }
   
   
@@ -238,7 +228,7 @@ void setup() {
 }
 
 void loop() {
-  if((mode==1&&DID==10)||mode==0){
+  if(mode!=1){
     
 // put your main code here, to run repeatedly:
     BLEScanResults foundDevices = pBLEScan->start(scanTime, false);

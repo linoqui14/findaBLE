@@ -1,1 +1,1 @@
-{"tags": {"1": {"id": "ff:ff:10:74:09:d8", "name": "iTAG", "distance": "0.33"}, "2": {"id": "ff:ff:10:74:3b:fb", "name": "iTAG", "distance": "-54"}}, "users": {"1": {"id": 0, "name": "akiko", "password": "123123", "deviceID": "34708b3877e8c72c", "isLogin": true}}}
+{"esp32": {"3": {"id": "1011", "distance": 0.01, "reset": 0, "mode": 1}}, "tags": {"1": {"id": "ff:ff:10:74:09:d8", "name": "iTAG", "distance_left": 0.08, "distance_right": 0.06}}}
