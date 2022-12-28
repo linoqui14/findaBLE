@@ -15,7 +15,7 @@
 #define EEPROM_SIZE 1
 
 const char* ssid = "waypaynimama221x-far";
-const char* password = "_Waypaynimama221xyz";
+const char* password = "_Waypaynimama22221xyzq";
 
 String serverName = "http://192.168.1.6:5000/";
 TaskHandle_t requestTask;
@@ -34,64 +34,65 @@ void RequestTask( void * parameter) {
       if(count==0){
         count = 1;       
       }else{count = 0;}
-      
-      HTTPClient http;
-      String serverPath = serverName + "get_esp32/"+pairID;
-      http.begin(serverPath.c_str());
-      int httpResponseCode = http.GET();
-      // Serial.println(httpResponseCode);
-      if(httpResponseCode==200){
-        String payload = http.getString();
-        JSONVar myObject = JSON.parse(payload);
-        JSONVar value = myObject["reset"];   
-        String strValue =   JSON.stringify(value);
-        int status = int(strValue[0]);
-            
-        //48 = 0
-        //1 = advertise
-        //0 = scan
-        
-               
-
-        if(status == 49&&DID==11){
-          Serial.println("ASdasddasd");
-          JSONVar value = myObject["mode"];   
+      if(DID==11){
+        HTTPClient http;
+        String serverPath = serverName + "get_esp32/"+pairID;
+        http.begin(serverPath.c_str());
+        int httpResponseCode = http.GET();
+        // Serial.println(httpResponseCode);
+        if(httpResponseCode==200){
+          String payload = http.getString();
+          JSONVar myObject = JSON.parse(payload);
+          JSONVar value = myObject["reset"];   
           String strValue =   JSON.stringify(value);
-          mode = int(strValue[0]);
-         
-          if(mode==49){
-            mode = 0;
+          int status = int(strValue[0]);
+              
+          //48 = 0
+          //1 = advertise
+          //0 = scan
+          
+                
+          if(status == 49&&DID==11){
+          
+            JSONVar value = myObject["mode"];   
+            String strValue =   JSON.stringify(value);
+            mode = int(strValue[0]);
+          
+            if(mode==49){
+              mode = 0;
+            }
+            else{
+              mode = 1;
+            }
+            HTTPClient http;
+            String serverPath = serverName+"/update_esp32_mode/"+pairID+"/"+mode;
+            http.begin(serverPath.c_str()); 
+            int httpResponseCode = http.GET();
+            delay(2000);           
+            ESP.restart();      
           }
-          else{
-            mode = 1;
-          }
+        }
+        else if(DID==11){
           HTTPClient http;
-          String serverPath = serverName+"/upsert_esp32/"+pairID+"/"+pairDistance+"/0/"+mode;
+          String serverPath = serverName+"/insert_esp32/"+pairID;
           http.begin(serverPath.c_str()); 
           int httpResponseCode = http.GET();
-          delay(2000);           
-          ESP.restart();      
-        }
+        } delay(3000); 
         
       }   
-      else{
-        HTTPClient http;
-        String serverPath = serverName+"/upsert_esp32/"+pairID+"/"+pairDistance+"/na/"+"na";
-        http.begin(serverPath.c_str()); 
-        int httpResponseCode = http.GET();
-      }   
+       
       
-      if(mode==1&&DID==10){
-        HTTPClient http;
-        String serverPath = serverName+"/upsert_esp32/"+pairID+"/"+pairDistance+"/na/"+"na";
-        http.begin(serverPath.c_str()); 
-        int httpResponseCode = http.GET();
+      // if(mode==1&&DID==10){
+      //   HTTPClient http;
+      //   String serverPath = serverName+"/update_esp32_distance/"+pairID+"/"+pairDistance;
+      //   http.begin(serverPath.c_str()); 
+      //   int httpResponseCode = http.GET();
         
-      }
+      // }
     }
     
     
-    delay(1000);
+    
     
   }
 }
@@ -122,7 +123,16 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
                      
             if(advertisedDevice.getName().compare("ESP32-11")==0){
               pairDistance = pow(10, (-77 - rssi)/(10*2.5));
-              Serial.println(pairDistance);
+              Serial.println("ESP: "+String(pairDistance));
+              // Serial.println(mode);
+              if(mode==1&&DID==10){
+                
+                  HTTPClient http;
+                  String serverPath = serverName+"/update_esp32_distance/"+pairID+"/"+pairDistance;
+                  http.begin(serverPath.c_str()); 
+                  int httpResponseCode = http.GET();
+                  
+                }
               // Serial.print("Distance: ");
               // Serial.println(pairDistance); 
             }
@@ -134,12 +144,12 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
               if(DID==11){
                 position = "right";
               }
-              if(mode!=1){
+              
                 String serverPath = serverName + "upsert_tag/"+advertisedDevice.getAddress().toString().c_str()+"/"+name+"/"+String(pow(10, (-77 - rssi)/(10*2.5)))+"-"+position;
                 Serial.println(serverPath);     
                 http.begin(serverPath.c_str());
                 int httpResponseCode = http.GET();
-              }
+              
               
             }         
           }
@@ -182,7 +192,7 @@ void setup() {
   }
   
   
-  Serial.println(mode);
+  // Serial.println(mode);
   switch(mode){
     case 1:
       Serial.println("Mode: Advertise");
@@ -196,7 +206,8 @@ void setup() {
       break;   
   }
 
-  
+  // EEPROM.write(0, 11);
+  // EEPROM.commit();
   if(DID==255){
     EEPROM.write(0, 11);
     EEPROM.commit();
@@ -238,6 +249,7 @@ void setup() {
 }
 
 void loop() {
+
   if((mode==1&&DID==10)||mode==0){
     
 // put your main code here, to run repeatedly:

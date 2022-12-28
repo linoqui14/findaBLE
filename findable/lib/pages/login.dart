@@ -43,7 +43,6 @@ class _LoginPageState extends State<LoginPage> {
 
         if(res==null)return;
         User user = res;
-        print(user.isLogin);
         if(user.isLogin){
           Navigator.pushAndRemoveUntil(
             context,

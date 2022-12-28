@@ -90,40 +90,43 @@ class Tag:
 
 
 class ESP32Pair:
-    def __init__(self,id,distance,reset,mode):
-            esp32PairObj = esp32PairDB.search(where('id')==id)
+    def __init__(self,id,distance,reset,mode,roomID):
+            # esp32PairObj = esp32PairDB.search(where('id')==id)
             self.id = id
-            self.isNew = True
             self.distance = distance
-
+            self.roomID = roomID
             if reset!='na':
                 self.reset = int(reset)
             else:
                 self.reset = reset
-            
             if mode!='na':
                 self.mode = int(mode)
             else:
                 self.mode = mode
                 
-            if  esp32PairObj!=[] :
-                esp32PairObj = esp32PairObj[0]
-                if(reset=='na' and esp32PairObj['reset']!='na'):
-                    self.reset = int(esp32PairObj['reset'])
+            # if  esp32PairObj!=[] :
+            #     esp32PairObj = esp32PairObj[0]
+            #     if(reset=='na' and esp32PairObj['reset']!='na'):
+            #         self.reset = int(esp32PairObj['reset'])
                     
-                if(mode=='na' and esp32PairObj['mode']!='na'):
-                    self.mode = int(esp32PairObj['mode'])
-                if(self.distance=="0.00"):
-                    self.distance = esp32PairObj['distance']
-                self.id  = esp32PairObj['id']
-                self.isNew = False
-                
-    def upsert(self):
-        if not self.isNew:
-            esp32PairDB.update(self.toJson(),where('id') == self.id)
-            return self.toJson()
-        esp32PairDB.insert(self.toJson())
-        return self.toJson()  
+            #     if(mode=='na' and esp32PairObj['mode']!='na'):
+            #         self.mode = int(esp32PairObj['mode'])
+            #     if(self.distance=="0.00"):
+            #         self.distance = esp32PairObj['distance']
+            #     if roomID!='na':
+            #         self.roomID = esp32PairObj['roomID']
+            #     self.id  = esp32PairObj['id']
+            #     self.isNew = False
+    def insert(self):
+        esp32PairDB.insert(self.toJson())    
+    def update(self):
+        esp32PairDB.update(self.toJson(),where('id') == self.id)
+    # def upsert(self):
+    #     if not self.isNew:
+    #         esp32PairDB.update(self.toJson(),where('id') == self.id)
+    #         return self.toJson()
+    #     esp32PairDB.insert(self.toJson())
+    #     return self.toJson()  
 
     def toJson(self):
         return {
@@ -131,6 +134,7 @@ class ESP32Pair:
             'distance':self.distance,
             'reset':self.reset,
             'mode':self.mode,
+            'roomID':self.roomID       
         }
     
 class Detector:

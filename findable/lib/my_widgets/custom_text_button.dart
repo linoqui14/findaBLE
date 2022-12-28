@@ -19,7 +19,8 @@ class CustomTextButton extends StatelessWidget{
         this.width = 100,
         this.height = 30,
         this.padding = EdgeInsets.zero,
-        this.onHold
+        this.onHold,
+        this.style,
       }) : super(key: key);
 
   final Function()? onPressed;
@@ -34,6 +35,7 @@ class CustomTextButton extends StatelessWidget{
   final double height;
   final EdgeInsets padding;
   final Function()? onHold;
+  final TextStyle? style;
 
 
   @override
@@ -47,7 +49,7 @@ class CustomTextButton extends StatelessWidget{
             padding: padding,
             alignment: Alignment.center,
             width: width,
-            child: Text(text,style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold),)
+            child: Text(text,style: style!=null?style:const TextStyle(color: Colors.white,fontWeight: FontWeight.bold),)
         ),
         style: ButtonStyle(
             padding: MaterialStateProperty.all(EdgeInsets.zero),

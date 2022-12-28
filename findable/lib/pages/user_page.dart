@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:findable/my_widgets/custom_text_button.dart';
@@ -5,10 +6,12 @@ import 'package:findable/my_widgets/custom_textfield.dart';
 import 'package:findable/pages/login.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/ESP.dart';
 import '../models/room.dart';
 import '../models/tag.dart';
 import '../models/users.dart';
 import '../tools/variables.dart';
+import 'package:http/http.dart';
 import 'dart:ui' as ui;
 
 class UserPage extends StatefulWidget {
@@ -23,11 +26,14 @@ class UserPage extends StatefulWidget {
 class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
   late TabController _tabController;
   List<Room> rooms = [];
+  List<ESP> esps = [];
   List<Tag> tags =[];
   void initState() {
     super.initState();
     _tabController = new TabController(length: 1, vsync: this);
-
+    // DBController.get(command: "get_room/", data: {}).then((value) {
+    //   print(value);
+    // });
   }
   @override
   Widget build(BuildContext context) {
@@ -183,338 +189,410 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
               ),
             ),
           ),
-          body: TabBarView(
-
-            controller: _tabController,
-            children: [
-
-              Container(
-                padding: EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                        alignment: Alignment.center,
-                        child: Text("ROOMS",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold),)
+          body: Container(
+            padding: EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                    alignment: Alignment.center,
+                    child: Text("ROOMS",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold),)
+                ),
+                Expanded(
+                  child: Container(
+                    // padding: EdgeInsets,
+                    margin: EdgeInsets.only(top: 10),
+                    decoration: BoxDecoration(
+                        color: Colors.indigo,
+                        borderRadius: BorderRadius.all(Radius.circular(20))
                     ),
-                    Expanded(
-                      child: Container(
-                        // padding: EdgeInsets,
-                        margin: EdgeInsets.only(top: 10),
-                        decoration: BoxDecoration(
-                            color: Colors.indigo,
-                            borderRadius: BorderRadius.all(Radius.circular(20))
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.all(Radius.circular(20)),
-                          child: Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: ListView(
-                              children: rooms.map((room) {
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: FutureBuilder<String?>(
+                            future: DBController.get(command: 'get_room/', data: {'userID':widget.user.id.toString()}),
+                            builder: (context, snapshot) {
 
-                                return  StatefulBuilder(
-                                    builder: (context,setState1) {
-                                      return ClipRRect(
-                                        borderRadius: BorderRadius.all(Radius.circular(20)),
-                                        child: ExpansionTile(
-                                          collapsedIconColor: Colors.white,
-                                          backgroundColor: Colors.indigoAccent,
-                                          iconColor: Colors.indigo,
-                                          title: Container(
-                                            margin: EdgeInsets.only(bottom: 10),
-                                            decoration: BoxDecoration(
-                                                color: Colors.indigoAccent,
-                                                borderRadius: BorderRadius.all(Radius.circular(20))
-                                            ),
-                                            padding: const EdgeInsets.all(10),
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Text(room.id,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white),),
-                                                Text(room.name.toUpperCase(),style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white),),
-                                                Row(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(tags.where((element) => room.id==element.roomID).length.toString(),style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white),),
-                                                    Text(tags.where((element) => room.id==element.roomID).length>1?' tags':' tag',style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white,fontSize: 10),),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          children:[
-                                            SizedBox(
-                                              height: 100,
-                                              child: ListView(
-                                                children: tags.where((element) => room.id==element.roomID) .map((e){
-                                                  return Padding(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 27),
-                                                    child: Container(
-                                                        padding: EdgeInsets.all(10),
-                                                        margin: EdgeInsets.only(bottom: 10),
-                                                        decoration: BoxDecoration(
-                                                            color: Colors.indigo,
-                                                            borderRadius: BorderRadius.all(Radius.circular(20))
-                                                        ),
-                                                        child: Row(
+                              if(!snapshot.hasData)return Center();
+                              if(snapshot.connectionState==ConnectionState.waiting)return Center(child: CircularProgressIndicator(),);
+                              List<Room> rooms = [];
+                              var jsons = jsonDecode(snapshot.data!);
+
+                              for(var json in jsons){
+                                rooms.add(Room.toObject(json));
+                              }
+
+                              return ListView(
+                                children: rooms.map((room) {
+                                  // ESP esp = esps.where((element) =>element.roomID == room.id).first;
+                                  return  FutureBuilder<String?>(
+                                      future: DBController.get(command: 'get_esp32_with_room', data: {'roomID':room.id.toString()}),
+                                      builder: (context,snapshot) {
+                                        if(!snapshot.hasData)return Center();
+                                        if(snapshot.connectionState==ConnectionState.waiting)return Center(child: CircularProgressIndicator(),);
+                                        print(snapshot.data);
+                                        var json = jsonDecode(snapshot.data!);
+                                        ESP esp = ESP.toObject(json);
+
+                                        late Function(void Function()) stateDistanceFunction;
+                                        getESP(){
+                                          DBController.get(command: "get_esp32/${esp.id}", data: {}).then((value) {
+
+                                              esp = ESP.toObject(jsonDecode(value!));
+                                              Future.delayed(Duration(seconds: 2), (){
+                                                stateDistanceFunction((){
+                                                getESP();
+                                                });
+                                              });
+
+
+                                          });
+                                        }
+                                        getESP();
+                                        return StatefulBuilder(
+                                            builder: (context,setState1) {
+                                              stateDistanceFunction = setState1;
+                                              return ClipRRect(
+                                                borderRadius: BorderRadius.all(Radius.circular(20)),
+                                                child: ExpansionTile(
+                                                  collapsedIconColor: Colors.white,
+                                                  backgroundColor: Colors.indigoAccent,
+                                                  iconColor: Colors.indigo,
+                                                  title: Container(
+                                                    margin: EdgeInsets.only(bottom: 10),
+                                                    decoration: BoxDecoration(
+                                                        color: Colors.indigoAccent,
+                                                        borderRadius: BorderRadius.all(Radius.circular(20))
+                                                    ),
+                                                    padding: const EdgeInsets.all(10),
+                                                    child: Column(
+                                                      children: [
+                                                        Row(
                                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                           children: [
-                                                            Expanded(
-                                                                child: GestureDetector(
-                                                                    onTap: (){
-                                                                      Tools.basicDialog(
-                                                                          context: context,
-                                                                          statefulBuilder: StatefulBuilder(
-                                                                              builder: (context,setState3){
-                                                                                return Dialog(
-                                                                                  elevation: 0,
-                                                                                  backgroundColor: Colors.transparent,
-                                                                                  alignment: Alignment.center,
-                                                                                  child: Column(
-                                                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                                                    children: [
-                                                                                      Text("${e.name} Location",style:GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 25) ,),
-                                                                                      Container(
-                                                                                        height: 330,
-                                                                                        width: double.infinity,
-                                                                                        decoration: BoxDecoration(
-                                                                                            color: Colors.white,
-                                                                                            borderRadius: BorderRadius.all(Radius.circular(20))
-                                                                                        ),
-                                                                                        child: Column(
-
-                                                                                          children: [
-                                                                                            Padding(
-                                                                                              padding: const EdgeInsets.all(10),
-                                                                                              child: Row(
-                                                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                                                children: [
-                                                                                                  Icon(Icons.sensors),
-                                                                                                  Icon(Icons.sensors),
-                                                                                                ],
-                                                                                              ),
-                                                                                            ),
-                                                                                            Expanded(
-                                                                                              child: Stack(
-                                                                                                children: [
-                                                                                                  Builder(
-                                                                                                      builder: (context) {
-                                                                                                        double distance = sqrt(((150-12)*(150-12))+((150-12)*(150-31)));
-                                                                                                        return Positioned(
-                                                                                                          child: Column(
-                                                                                                            children: [
-                                                                                                              Text("Distance",style: TextStyle(fontSize: 10),),
-                                                                                                              Text(distance.roundToDouble().toString(),style: TextStyle(fontSize: 10),),
-                                                                                                            ],
-                                                                                                          ),
-                                                                                                          right: (150+12)/2,
-                                                                                                          bottom: (150+31)/2,
-                                                                                                        );
-                                                                                                      }
-                                                                                                  ),
-                                                                                                  Positioned(
-                                                                                                    child: Column(
-                                                                                                      children: [
-                                                                                                        Icon(Icons.person_pin_circle,color: Colors.indigo,),
-                                                                                                        Text("You",style: TextStyle(fontSize: 10),),
-                                                                                                        Text("(150,150)",style: TextStyle(fontSize: 10),),
-                                                                                                      ],
-                                                                                                    ),
-                                                                                                    right: 150,
-                                                                                                    bottom: 150,
-                                                                                                  ),
-                                                                                                  Positioned(
-                                                                                                    child: Column(
-                                                                                                      children: [
-                                                                                                        Icon(Icons.place,color: Colors.blue,),
-                                                                                                        Text("${e.name}",style: TextStyle(fontSize: 10),),
-                                                                                                        Text("(12,31)",style: TextStyle(fontSize: 10),),
-                                                                                                      ],
-                                                                                                    ),
-                                                                                                    right: 12,
-                                                                                                    bottom: 31,
-                                                                                                  ),
-                                                                                                  // CustomPaint(
-                                                                                                  //   painter: LinePainter(),
-                                                                                                  // ),
-                                                                                                ],
-                                                                                              ),
-                                                                                            ),
-                                                                                          ],
-                                                                                        ),
-                                                                                      )
-                                                                                    ],
-                                                                                  ),
-                                                                                );
-                                                                              }
-                                                                          )
-
-                                                                      );
-                                                                    },
-                                                                    child: Text(e.name,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.normal,color: Colors.white,fontSize: 10),)
-                                                                ),
-                                                            ),
-                                                            GestureDetector(
-                                                                onTap: (){
-                                                                  TextEditingController tagName = TextEditingController(text: e.name);
-                                                                  Tools.basicDialog(
-                                                                      context: context,
-                                                                      statefulBuilder: StatefulBuilder(
-                                                                        builder: (contex,setState2){
-                                                                          return Dialog(
-                                                                            elevation: 0,
-                                                                            alignment: Alignment.center,
-                                                                            backgroundColor: Colors.transparent,
-                                                                            child: Column(
-                                                                              mainAxisAlignment: MainAxisAlignment.center,
-                                                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                                                              children: [
-                                                                                Padding(
-                                                                                  padding: const EdgeInsets.only(left: 20.0),
-                                                                                  child: Text('Tag',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 18),),
-                                                                                ),
-                                                                                Container(
-                                                                                  padding: EdgeInsets.all(20),
-                                                                                  width: double.infinity,
-                                                                                  height: 100,
-                                                                                  decoration: BoxDecoration(
-                                                                                      color: Colors.white,
-                                                                                      borderRadius: BorderRadius.only(topLeft:Radius.circular(20),topRight: Radius.circular(20),bottomRight: Radius.circular(20))
-                                                                                  ),
-                                                                                  child: Column(
-                                                                                    children: [
-                                                                                      CustomTextField(
-                                                                                        hint: "Name",
-                                                                                        controller: tagName,
-                                                                                        color: Colors.blue,
-                                                                                      )
-                                                                                    ],
-                                                                                  ),
-                                                                                ),
-                                                                                CustomTextButton(
-                                                                                  rTopRight: 20,
-                                                                                  rBottomRight: 20,
-                                                                                  rTopLeft: 0,
-                                                                                  rBottomLeft: 20,
-                                                                                  color: Colors.blue,
-                                                                                  text: "Save",
-                                                                                  onPressed: (){
-                                                                                    setState(() {
-                                                                                      Tag tag = Tag(id: e.id, name: tagName.text, roomID: room.id.toString(),x: 0,y: 0);
-                                                                                      tags[int.parse(tag.id)-1] = tag;
-                                                                                    });
-                                                                                    Navigator.of(context).pop();
-                                                                                  },
-                                                                                ),
-                                                                              ],
-                                                                            ),
-                                                                          );
-                                                                        },
-                                                                      )
-                                                                  );
-                                                                  print("asdasda");
-                                                                },
-                                                                child: SizedBox(
-                                                                    width: 20,
-                                                                    height: 20,
-                                                                    child: Icon(Icons.edit,color: Colors.white,size: 12,)
-                                                                )
+                                                            Text(room.id,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white),),
+                                                            Text(room.name.toUpperCase(),style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white),),
+                                                            Row(
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                              children: [
+                                                                Text(tags.where((element) => room.id==element.roomID).length.toString(),style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white),),
+                                                                Text(tags.where((element) => room.id==element.roomID).length>1?' tags':' tag',style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white,fontSize: 10),),
+                                                              ],
                                                             ),
 
                                                           ],
-                                                        )
+                                                        ),
+                                                        Column(
+                                                          children: [
+                                                            Row(
+                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                              children: [
+                                                                Text(esp.id,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white),),
+                                                                CustomTextButton(
+                                                                  onPressed: (){
+                                                                    DBController.get(command: "update_esp32_reset/${esp.id}/1", data: {}).then((value) {
+                                                                      print(value);
+                                                                      stateDistanceFunction(() {
+                                                                        esp.mode = esp.mode==1?0:1;
+
+                                                                      });
+                                                                    });
+
+                                                                  },
+                                                                  color: Colors.blue,
+                                                                  style: TextStyle(fontSize: 8,color: Colors.white),
+                                                                  text: "Mode: "+(esp.mode==0?"Scan":"Get ESP distance"),
+                                                                ),
+                                                                Text(esp.mode.toString(),style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white),),
+
+
+
+                                                              ],
+                                                            ),
+                                                            Column(
+                                                                children: [
+                                                                  Text(esp.sensorDistance.toStringAsPrecision(2)+"m",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white),)
+                                                                ]
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
                                                     ),
-                                                  );
-                                                }).toList(),
-                                              ),
-                                            ),
-                                            IconButton(
-                                              icon:Icon(Icons.add,color: Colors.white,),
-                                              onPressed: () {
-                                                TextEditingController tagName = TextEditingController();
-                                                Tools.basicDialog(
-                                                    context: context,
-                                                    statefulBuilder: StatefulBuilder(
-                                                      builder: (contex,setState2){
-                                                        return Dialog(
-                                                          elevation: 0,
-                                                          alignment: Alignment.center,
-                                                          backgroundColor: Colors.transparent,
-                                                          child: Column(
-                                                            mainAxisAlignment: MainAxisAlignment.center,
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              Padding(
-                                                                padding: const EdgeInsets.only(left: 20.0),
-                                                                child: Text('Tag',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 18),),
-                                                              ),
-                                                              Container(
-                                                                padding: EdgeInsets.all(20),
-                                                                width: double.infinity,
-                                                                height: 100,
+                                                  ),
+                                                  children:[
+                                                    SizedBox(
+                                                      height: 100,
+                                                      child: ListView(
+                                                        children: tags.where((element) => room.id==element.roomID) .map((e){
+                                                          return Padding(
+                                                            padding: const EdgeInsets.symmetric(horizontal: 27),
+                                                            child: Container(
+                                                                padding: EdgeInsets.all(10),
+                                                                margin: EdgeInsets.only(bottom: 10),
                                                                 decoration: BoxDecoration(
-                                                                    color: Colors.white,
-                                                                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),topRight: Radius.circular(20),bottomRight: Radius.circular(20))
+                                                                    color: Colors.indigo,
+                                                                    borderRadius: BorderRadius.all(Radius.circular(20))
                                                                 ),
-                                                                child: Column(
+                                                                child: Row(
+                                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                   children: [
-                                                                    CustomTextField(
-                                                                      hint: "Name",
-                                                                      controller: tagName,
-                                                                      color: Colors.blue,
-                                                                    )
+                                                                    Expanded(
+                                                                      child: GestureDetector(
+                                                                          onTap: (){
+                                                                            Tools.basicDialog(
+                                                                                context: context,
+                                                                                statefulBuilder: StatefulBuilder(
+                                                                                    builder: (context,setState3){
+                                                                                      return Dialog(
+                                                                                        elevation: 0,
+                                                                                        backgroundColor: Colors.transparent,
+                                                                                        alignment: Alignment.center,
+                                                                                        child: Column(
+                                                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                          children: [
+                                                                                            Text("${e.name} Location",style:GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 25) ,),
+                                                                                            Container(
+                                                                                              height: 330,
+                                                                                              width: double.infinity,
+                                                                                              decoration: BoxDecoration(
+                                                                                                  color: Colors.white,
+                                                                                                  borderRadius: BorderRadius.all(Radius.circular(20))
+                                                                                              ),
+                                                                                              child: Column(
+
+                                                                                                children: [
+                                                                                                  Padding(
+                                                                                                    padding: const EdgeInsets.all(10),
+                                                                                                    child: Row(
+                                                                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                                                      children: [
+                                                                                                        Icon(Icons.sensors),
+                                                                                                        Icon(Icons.sensors),
+                                                                                                      ],
+                                                                                                    ),
+                                                                                                  ),
+                                                                                                  Expanded(
+                                                                                                    child: Stack(
+                                                                                                      children: [
+                                                                                                        Builder(
+                                                                                                            builder: (context) {
+                                                                                                              double distance = sqrt(((150-12)*(150-12))+((150-12)*(150-31)));
+                                                                                                              return Positioned(
+                                                                                                                child: Column(
+                                                                                                                  children: [
+                                                                                                                    Text("Distance",style: TextStyle(fontSize: 10),),
+                                                                                                                    Text(distance.roundToDouble().toString(),style: TextStyle(fontSize: 10),),
+                                                                                                                  ],
+                                                                                                                ),
+                                                                                                                right: (150+12)/2,
+                                                                                                                bottom: (150+31)/2,
+                                                                                                              );
+                                                                                                            }
+                                                                                                        ),
+                                                                                                        Positioned(
+                                                                                                          child: Column(
+                                                                                                            children: [
+                                                                                                              Icon(Icons.person_pin_circle,color: Colors.indigo,),
+                                                                                                              Text("You",style: TextStyle(fontSize: 10),),
+                                                                                                              Text("(150,150)",style: TextStyle(fontSize: 10),),
+                                                                                                            ],
+                                                                                                          ),
+                                                                                                          right: 150,
+                                                                                                          bottom: 150,
+                                                                                                        ),
+                                                                                                        Positioned(
+                                                                                                          child: Column(
+                                                                                                            children: [
+                                                                                                              Icon(Icons.place,color: Colors.blue,),
+                                                                                                              Text("${e.name}",style: TextStyle(fontSize: 10),),
+                                                                                                              Text("(12,31)",style: TextStyle(fontSize: 10),),
+                                                                                                            ],
+                                                                                                          ),
+                                                                                                          right: 12,
+                                                                                                          bottom: 31,
+                                                                                                        ),
+                                                                                                        // CustomPaint(
+                                                                                                        //   painter: LinePainter(),
+                                                                                                        // ),
+                                                                                                      ],
+                                                                                                    ),
+                                                                                                  ),
+                                                                                                ],
+                                                                                              ),
+                                                                                            )
+                                                                                          ],
+                                                                                        ),
+                                                                                      );
+                                                                                    }
+                                                                                )
+
+                                                                            );
+                                                                          },
+                                                                          child: Text(e.name,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.normal,color: Colors.white,fontSize: 10),)
+                                                                      ),
+                                                                    ),
+                                                                    GestureDetector(
+                                                                        onTap: (){
+                                                                          TextEditingController tagName = TextEditingController(text: e.name);
+                                                                          Tools.basicDialog(
+                                                                              context: context,
+                                                                              statefulBuilder: StatefulBuilder(
+                                                                                builder: (contex,setState2){
+                                                                                  return Dialog(
+                                                                                    elevation: 0,
+                                                                                    alignment: Alignment.center,
+                                                                                    backgroundColor: Colors.transparent,
+                                                                                    child: Column(
+                                                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                      children: [
+                                                                                        Padding(
+                                                                                          padding: const EdgeInsets.only(left: 20.0),
+                                                                                          child: Text('Tag',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 18),),
+                                                                                        ),
+                                                                                        Container(
+                                                                                          padding: EdgeInsets.all(20),
+                                                                                          width: double.infinity,
+                                                                                          height: 100,
+                                                                                          decoration: BoxDecoration(
+                                                                                              color: Colors.white,
+                                                                                              borderRadius: BorderRadius.only(topLeft:Radius.circular(20),topRight: Radius.circular(20),bottomRight: Radius.circular(20))
+                                                                                          ),
+                                                                                          child: Column(
+                                                                                            children: [
+                                                                                              CustomTextField(
+                                                                                                hint: "Name",
+                                                                                                controller: tagName,
+                                                                                                color: Colors.blue,
+                                                                                              )
+                                                                                            ],
+                                                                                          ),
+                                                                                        ),
+                                                                                        CustomTextButton(
+                                                                                          rTopRight: 20,
+                                                                                          rBottomRight: 20,
+                                                                                          rTopLeft: 0,
+                                                                                          rBottomLeft: 20,
+                                                                                          color: Colors.blue,
+                                                                                          text: "Save",
+                                                                                          onPressed: (){
+                                                                                            setState(() {
+                                                                                              Tag tag = Tag(id: e.id, name: tagName.text, roomID: room.id.toString(),x: 0,y: 0);
+                                                                                              tags[int.parse(tag.id)-1] = tag;
+                                                                                            });
+                                                                                            Navigator.of(context).pop();
+                                                                                          },
+                                                                                        ),
+                                                                                      ],
+                                                                                    ),
+                                                                                  );
+                                                                                },
+                                                                              )
+                                                                          );
+
+                                                                        },
+                                                                        child: SizedBox(
+                                                                            width: 20,
+                                                                            height: 20,
+                                                                            child: Icon(Icons.edit,color: Colors.white,size: 12,)
+                                                                        )
+                                                                    ),
+
                                                                   ],
-                                                                ),
-                                                              ),
-                                                              CustomTextButton(
-                                                                rTopRight: 20,
-                                                                rBottomRight: 20,
-                                                                rTopLeft: 0,
-                                                                rBottomLeft: 20,
-                                                                color: Colors.blue,
-                                                                text: "Add",
-                                                                onPressed: (){
-                                                                  setState(() {
-                                                                    Tag tag = Tag(id: (tags.length+1).toString(), name: tagName.text, roomID: room.id.toString(),x: 0,y: 0);
-                                                                    tags.add(tag);
-                                                                  });
-                                                                  Navigator.of(context).pop();
-                                                                },
-                                                              ),
-                                                            ],
-                                                          ),
+                                                                )
+                                                            ),
+                                                          );
+                                                        }).toList(),
+                                                      ),
+                                                    ),
+                                                    IconButton(
+                                                      icon:Icon(Icons.add,color: Colors.white,),
+                                                      onPressed: () {
+                                                        TextEditingController tagName = TextEditingController();
+                                                        Tools.basicDialog(
+                                                            context: context,
+                                                            statefulBuilder: StatefulBuilder(
+                                                              builder: (contex,setState2){
+                                                                return Dialog(
+                                                                  elevation: 0,
+                                                                  alignment: Alignment.center,
+                                                                  backgroundColor: Colors.transparent,
+                                                                  child: Column(
+                                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                    children: [
+                                                                      Padding(
+                                                                        padding: const EdgeInsets.only(left: 20.0),
+                                                                        child: Text('Tag',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 18),),
+                                                                      ),
+                                                                      Container(
+                                                                        padding: EdgeInsets.all(20),
+                                                                        width: double.infinity,
+                                                                        height: 100,
+                                                                        decoration: BoxDecoration(
+                                                                            color: Colors.white,
+                                                                            borderRadius: BorderRadius.only(topLeft:Radius.circular(20),topRight: Radius.circular(20),bottomRight: Radius.circular(20))
+                                                                        ),
+                                                                        child: Column(
+                                                                          children: [
+                                                                            CustomTextField(
+                                                                              hint: "Name",
+                                                                              controller: tagName,
+                                                                              color: Colors.blue,
+                                                                            )
+                                                                          ],
+                                                                        ),
+                                                                      ),
+                                                                      CustomTextButton(
+                                                                        rTopRight: 20,
+                                                                        rBottomRight: 20,
+                                                                        rTopLeft: 0,
+                                                                        rBottomLeft: 20,
+                                                                        color: Colors.blue,
+                                                                        text: "Add",
+                                                                        onPressed: (){
+                                                                          setState(() {
+                                                                            Tag tag = Tag(id: (tags.length+1).toString(), name: tagName.text, roomID: room.id.toString(),x: 0,y: 0);
+                                                                            tags.add(tag);
+                                                                          });
+                                                                          Navigator.of(context).pop();
+                                                                        },
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                );
+                                                              },
+                                                            )
                                                         );
                                                       },
+
+
                                                     )
-                                                );
-                                              },
-
-
-                                            )
-                                          ],
-                                        ),
-                                      );
-                                    }
-                                );
-                              }).toList(),
-                            ),
-                          ),
+                                                  ],
+                                                ),
+                                              );
+                                            }
+                                        );
+                                      }
+                                  );
+                                }).toList(),
+                              );
+                            }
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-              // Container(
-              //   child: Text('Tags'),
-              // )
-            ],
+              ],
+            ),
           ),
           floatingActionButton:FloatingActionButton(
             //Floating action button on Scaffold
             onPressed: (){
               TextEditingController roomName = TextEditingController();
+              TextEditingController ESP32ID = TextEditingController();
               switch(_tabController.index){
                 case 0:
                   Tools.basicDialog(
@@ -536,7 +614,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                 Container(
                                   padding: EdgeInsets.all(20),
                                   width: double.infinity,
-                                  height: 100,
+                                  height: 180,
                                   decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.only(topLeft:Radius.circular(20),topRight: Radius.circular(20),bottomRight: Radius.circular(20))
@@ -546,6 +624,11 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                       CustomTextField(
                                         hint: "Name",
                                         controller: roomName,
+                                        color: Colors.blue,
+                                      ),
+                                      CustomTextField(
+                                        hint: "ESP32 ID",
+                                        controller: ESP32ID,
                                         color: Colors.blue,
                                       )
                                     ],
@@ -559,12 +642,34 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                   color: Colors.blue,
                                   text: "Add",
                                   onPressed: (){
-                                    setState(() {
-                                      Room room = Room(id: (rooms.length+1).toString(), name: roomName.text, userID: widget.user.id.toString());
-                                      rooms.add(room);
+                                    if(ESP32ID.text.isNotEmpty&&roomName.text.isNotEmpty){
+                                      DBController.get(command: "get_esp32/${ESP32ID.text}", data: {}).then((esp32) {
 
-                                    });
-                                    Navigator.of(context).pop();
+                                        if(esp32![0]=='{'){
+                                          Room room = Room(name: roomName.text, userID: widget.user.id.toString());
+                                          DBController.get(command: 'insert_room/', data: {'userID':widget.user.id.toString(),'name':room.name}).then((room){
+                                            print(room);
+                                            ESP esp = ESP.toObject(jsonDecode(esp32));
+                                            DBController.post(command: "update_esp32_room", data: {'id':esp.id,'roomID':room}).then((value) {
+                                              setState(() {
+
+                                                // Room room = Room(id: (rooms.length+1).toString(), name: roomName.text, userID: widget.user.id.toString());
+                                                // rooms.add(room);
+                                                // esp.roomID = room.id;
+                                                // if(esps.where((element) => element.id==esp.id).isEmpty)esps.add(esp);
+                                              });
+                                              Navigator.of(context).pop();
+                                            });
+
+                                          });
+
+
+                                        }
+
+                                      });
+
+                                    }
+
                                   },
                                 ),
                               ],

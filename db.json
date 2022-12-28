@@ -1,1 +1,1 @@
-{"esp32": {"3": {"id": "1011", "distance": 0.01, "reset": 0, "mode": 1}}, "tags": {"1": {"id": "ff:ff:10:74:09:d8", "name": "iTAG", "distance_left": 0.08, "distance_right": 0.06}}}
+{"users": {"1": {"id": 0, "name": "aki", "password": "123", "deviceID": "47315ee418fe9ab2", "isLogin": true}}, "room": {"1": {"id": "0", "userID": "0", "name": "room"}}, "esp32": {"1": {"id": "1011", "distance": 0.31272727272727274, "reset": 0, "mode": 0, "roomID": "0"}, "2": {"id": "1011", "distance": 0, "reset": 0, "mode": 0, "roomID": "0"}}}
