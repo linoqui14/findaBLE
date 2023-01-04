@@ -2,7 +2,7 @@
 import imp
 from flask import Flask,request
 from tinydb import TinyDB,where
-from models import User,Tag,ESP32Pair
+from models import User,Tag,ESP32Pair,tagDB
 
 
 db = TinyDB('db.json')
@@ -11,10 +11,30 @@ esp32PairDB = db.table('esp32')
 roomDB = db.table('room')
 code = "123556"
 app = Flask(__name__)
-
+import cmath
 espDistanceTotal = 0
 espDistanceCount = 0
 espDistanceAVR = 0
+
+def tag_pos(a, b, c):
+
+    # p = (a + b + c) / 2.0
+    # s = cmath.sqrt(p * (p - a) * (p - b) * (p - c))
+    # y = 2.0 * s / c
+    # x = cmath.sqrt(b * b - y * y)
+    cos_a = (((b * b) + (c*c) - (a * a))) / (2 * b * c)
+    x = b * cos_a
+    y = b * cmath.sqrt(1 - (cos_a * cos_a))
+    return {'x':round(x.real, 1), 'y':round(y.real, 1)}
+
+@app.route("/get_tag_pos" , methods=["GET","POST"])
+def getTagPos():
+    c = esp32PairDB.get(where('id')=="1011")
+    c = c['distance']
+    tag = tagDB.get(where('espID')=='1011')
+    b = tag['distance_left']
+    a = tag['distance_right']
+    return tag_pos(a,b,c)
 
 @app.route("/upsert_user/<codep>" , methods=["GET","POST"])
 def upsertUser(codep):
@@ -64,22 +84,26 @@ def getUsers():
 def isConnected():
     return 1
     
+@app.route("/get_tag",methods=["GET","POST"])
+def getTag():
+    return tagDB.all()
 
-@app.route("/upsert_tag/<address>/<name>/<distance>",methods=["GET","POST"])
-def upsertTag(address,name,distance):
+@app.route("/upsert_tag/<address>/<name>/<distance>/<espID>",methods=["GET","POST"])
+def upsertTag(address,name,distance,espID):
     id = address
     distance = distance.split('-')
     position = distance[1]
     distance = distance[0]
     if position == "right": 
-        tag = Tag(name=name,id=id,distance_left="na",distance_right=float(distance))
+        tag = Tag(name=name,id=id,distance_left="na",distance_right=float(distance),espID=espID)
     else:
-        tag = Tag(name=name,id=id,distance_left=float(distance),distance_right="na")
+        tag = Tag(name=name,id=id,distance_left=float(distance),distance_right="na",espID=espID)
     tag.upsertUser()
     return tag.toJson()
 
 @app.route("/insert_esp32/<id>",methods=["GET","POST"])
 def insertESP32(id):
+    esp32PairDB.remove(where("id")==id)
     esp32 = ESP32Pair(id=id,distance=0,reset=0,mode=0,roomID="0")
     esp32.insert()
     return esp32.toJson()
@@ -87,6 +111,11 @@ def insertESP32(id):
 @app.route("/update_esp32_reset/<id>/<reset>",methods=["GET","POST"])
 def updateESP32Reset(id,reset):
     esp32PairDB.update({'reset':int(reset)},where('id')==id)
+    return "1"
+
+@app.route("/deleteESP32/<id>",methods=["GET","POST"])
+def deleteESP32(id):
+    esp32PairDB.remove(where("id")==id)
     return "1"
 
 @app.route("/update_esp32_mode/<id>/<mode>",methods=["GET","POST"])
@@ -112,6 +141,7 @@ def updateRoomESP32():
     
 @app.route("/get_esp32/<id>",methods=["GET","POST"])
 def getEsp(id):
+   
     esp32 = esp32PairDB.get(where('id')==id)
     # if(esp32.count==0):return {}
     # for x in esp32:

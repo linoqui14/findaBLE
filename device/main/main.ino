@@ -40,7 +40,7 @@ void RequestTask( void * parameter) {
         http.begin(serverPath.c_str());
         int httpResponseCode = http.GET();
         // Serial.println(httpResponseCode);
-        if(httpResponseCode==200){
+        if(httpResponseCode==200&&DID==11){
           String payload = http.getString();
           JSONVar myObject = JSON.parse(payload);
           JSONVar value = myObject["reset"];   
@@ -76,7 +76,7 @@ void RequestTask( void * parameter) {
           HTTPClient http;
           String serverPath = serverName+"/insert_esp32/"+pairID;
           http.begin(serverPath.c_str()); 
-          int httpResponseCode = http.GET();
+          httpResponseCode = http.GET();
         } delay(3000); 
         
       }   
@@ -145,7 +145,7 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
                 position = "right";
               }
               
-                String serverPath = serverName + "upsert_tag/"+advertisedDevice.getAddress().toString().c_str()+"/"+name+"/"+String(pow(10, (-77 - rssi)/(10*2.5)))+"-"+position;
+                String serverPath = serverName + "upsert_tag/"+advertisedDevice.getAddress().toString().c_str()+"/"+name+"/"+String(pow(10, (-77 - rssi)/(10*2.5)))+"-"+position+"/"+String(pairID);
                 Serial.println(serverPath);     
                 http.begin(serverPath.c_str());
                 int httpResponseCode = http.GET();

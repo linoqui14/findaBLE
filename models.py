@@ -50,13 +50,14 @@ class User:
         else: return self.toJson()
     
 class Tag:
-    def __init__(self,name,id,distance_left,distance_right):
+    def __init__(self,name,id,distance_left,distance_right,espID):
         tagObj = tagDB.search(where('id')==id)
         self.id = id
         self.name = name
         self.isNew = True
         self.distance_left = distance_left
         self.distance_right = distance_right
+        self.espID = espID
        
         # self.isLogin = False
 
@@ -77,6 +78,7 @@ class Tag:
             'name':self.name,
             'distance_left':self.distance_left,
             'distance_right':self.distance_right,
+            'espID':self.espID,
         }
 
     

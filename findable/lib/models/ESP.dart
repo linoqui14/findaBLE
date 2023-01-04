@@ -18,10 +18,16 @@ class ESP{
   }
 
   static ESP toObject(Map<String,dynamic> json){
+    double distance = 0;
+    try{
+      distance = json['distance'];
+    }catch(e){
+      distance = 0.0;
+    }
     return ESP(
         id: json['id'],
         mode:json['mode'],
-        sensorDistance:json['distance'],
+        sensorDistance:distance,
         roomID: "N/A"
     );
   }
