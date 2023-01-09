@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -12,7 +13,10 @@ import '../models/tag.dart';
 import '../models/users.dart';
 import '../tools/variables.dart';
 import 'package:http/http.dart';
+import 'package:flutter_blue/flutter_blue.dart';
+
 import 'dart:ui' as ui;
+
 
 class UserPage extends StatefulWidget {
   const UserPage({Key? key, required this.user}) : super(key: key);
@@ -28,12 +32,18 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
   List<Room> rooms = [];
   List<ESP> esps = [];
   List<Tag> tags =[];
+  final FlutterBlue flutterBlue = FlutterBlue.instance;
+
   void initState() {
+    final List<BluetoothDevice> devicesList = [];
     super.initState();
     _tabController = new TabController(length: 1, vsync: this);
-    // DBController.get(command: "get_room/", data: {}).then((value) {
-    //   print(value);
-    // });
+
+
+
+
+
+
   }
   @override
   Widget build(BuildContext context) {
@@ -194,6 +204,19 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                CustomTextButton(
+                  text: "Search TAG",
+                  onPressed: (){
+                    
+                    flutterBlue.startScan();
+                    flutterBlue.scanResults.forEach((element) {
+                      for(var result in element){
+                        print(result.device.name);
+                      }
+                    });
+                    // _startScan();
+                  },
+                ),
                 Container(
                     alignment: Alignment.center,
                     child: Text("ROOMS",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold),)
