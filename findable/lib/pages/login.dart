@@ -7,7 +7,7 @@ import 'package:findable/pages/user_page.dart';
 import 'package:findable/tools/variables.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:device_info_plus/device_info_plus.dart';
+import 'package:platform_device_id/platform_device_id.dart';
 import '../models/users.dart';
 import '../my_widgets/pressable.dart';
 
@@ -23,24 +23,15 @@ class _LoginPageState extends State<LoginPage> {
 
   TextEditingController username = TextEditingController();
   TextEditingController password = TextEditingController();
-  Future<String?> _getId() async {
-    var deviceInfo = DeviceInfoPlugin();
-    if (Platform.isIOS) { // import 'dart:io'
-      var iosDeviceInfo = await deviceInfo.iosInfo;
-      return iosDeviceInfo.identifierForVendor; // unique ID on iOS
-    } else if(Platform.isAndroid) {
-      var androidDeviceInfo = await deviceInfo.androidInfo;
-      return androidDeviceInfo.androidId; // unique ID on Android
-    }
-  }
+
 
   @override
   void initState() {
 
-    _getId().then((value) {
+    PlatformDeviceId.getDeviceId.then((value) {
 
       DBController.getCurrentLogin(deviceID: value).then((res) {
-
+        print(res);
         if(res==null)return;
         User user = res;
         if(user.isLogin){
@@ -97,16 +88,16 @@ class _LoginPageState extends State<LoginPage> {
                           color: Colors.blue,
                           onPressed: (){
                             if(password.text.isNotEmpty&&username.text.isNotEmpty){
-                              _getId().then((deviceID){
+                              PlatformDeviceId.getDeviceId.then((deviceID){
                                 DBController.getUser(username: username.text, password: password.text,deviceID: deviceID!).then((user) {
                                   if(user==null)return;
                                   user.isLogin = true;
-                                  DBController.upsertUser(user: user).then((updatedUser){
+                                  DBController.get(command:'update_user',data: user.toJson()).then((updatedUser){
                                     // print(updatedUser!.deviceID);
                                     if(updatedUser==null) return;
                                     Navigator.pushAndRemoveUntil(
                                       context,
-                                      MaterialPageRoute(builder: (context) => UserPage(user: updatedUser,)),
+                                      MaterialPageRoute(builder: (context) => UserPage(user: user,)),
                                           (Route<dynamic> route) => false,
                                     );
                                   });
@@ -194,8 +185,9 @@ class _LoginPageState extends State<LoginPage> {
                                                         text: "Register",
                                                         onPressed: (){
                                                           if(password.text.isNotEmpty&&username.text.isNotEmpty){
-                                                            _getId().then((value) {
+                                                            PlatformDeviceId.getDeviceId.then((value) {
                                                               DBController.upsertUser(user: User(name: username.text,password: password.text,deviceID: value!)).then((value) {
+                                                                print(value!);
                                                                 if(value!=null){
                                                                   Navigator.of(
                                                                       context)

@@ -122,13 +122,13 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
             Serial.println(advertisedDevice.getAddress().toString().c_str());
                      
             if(advertisedDevice.getName().compare("ESP32-11")==0){
-              pairDistance = pow(10, (-77 - rssi)/(10*2.5));
+              pairDistance = rssi;
               Serial.println("ESP: "+String(pairDistance));
               // Serial.println(mode);
               if(mode==1&&DID==10){
                 
                   HTTPClient http;
-                  String serverPath = serverName+"/update_esp32_distance/"+pairID+"/"+pairDistance;
+                  String serverPath = serverName+"/update_esp32_distance/"+pairID+"/"+String(pairDistance);
                   http.begin(serverPath.c_str()); 
                   int httpResponseCode = http.GET();
                   
@@ -145,7 +145,7 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
                 position = "right";
               }
               
-                String serverPath = serverName + "upsert_tag/"+advertisedDevice.getAddress().toString().c_str()+"/"+name+"/"+String(pow(10, (-77 - rssi)/(10*2.5)))+"-"+position+"/"+String(pairID);
+                String serverPath = serverName + "upsert_tag/"+advertisedDevice.getAddress().toString().c_str()+"/"+name+"/"+String(rssi)+"(-)"+position+"/"+String(pairID);
                 Serial.println(serverPath);     
                 http.begin(serverPath.c_str());
                 int httpResponseCode = http.GET();

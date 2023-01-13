@@ -43,7 +43,7 @@ class DBController{
   static Future<User?> getUser({required String username,required String password,required String deviceID}) async{
     String phpurl = "http://$ip:5000/get_user/$code";
     var res = await http.post(Uri.parse(phpurl),body: {'username':username,'password':password,'deviceID':deviceID});
-    // print(res.body);
+    print(res.body);
     try {
       User user = User.toObject(json.decode(res.body));
       return user;
@@ -66,7 +66,7 @@ class DBController{
   }
 
   static Future<User?> upsertUser({required User user}) async{
-    String phpurl = "http://$ip:5000/upsert_user/$code";
+    String phpurl = "http://$ip:5000/insert_user/$code";
     var res = await http.post(Uri.parse(phpurl),body: user.toJson());
     try {
       User user = User.toObject(json.decode(res.body));

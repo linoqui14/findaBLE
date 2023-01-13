@@ -2,10 +2,15 @@ from pickle import FALSE
 import re
 from tinydb import TinyDB,where
 
-db = TinyDB('db.json')
-userDB = db.table('users')
-tagDB = db.table('tags')
-esp32PairDB = db.table('esp32')
+dbUserJS = TinyDB('user.json')
+roomDBJS = TinyDB('room.json')
+tagDBJS = TinyDB('tag.json')
+esp32PairDBJS = TinyDB('esp.json')
+
+userDB = dbUserJS.table('users')
+tagDB = tagDBJS.table('tags')
+esp32PairDB = esp32PairDBJS.table('esp32')
+
 class User:
     def __init__(self,name,password,deviceID,id='n/a',isLogin = False):
         if id =='null':
@@ -82,7 +87,7 @@ class Tag:
         }
 
     
-
+    
     def upsertUser(self):
         if not self.isNew:
             tagDB.update(self.toJson(),where('id') == self.id)
