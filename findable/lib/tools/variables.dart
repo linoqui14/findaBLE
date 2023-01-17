@@ -96,13 +96,17 @@ class Tools{
   // }
   static Future<void> basicDialog({
     required BuildContext context,
-    required StatefulBuilder statefulBuilder
+    required StatefulBuilder statefulBuilder,
+    required Future<bool> Function()? onPop
   }) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
-        return statefulBuilder;
+        return WillPopScope(
+            onWillPop: onPop,
+            child: statefulBuilder
+        );
       },
     );
   }

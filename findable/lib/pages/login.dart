@@ -92,6 +92,7 @@ class _LoginPageState extends State<LoginPage> {
                                 DBController.getUser(username: username.text, password: password.text,deviceID: deviceID!).then((user) {
                                   if(user==null)return;
                                   user.isLogin = true;
+                                  user.deviceID = deviceID;
                                   DBController.get(command:'update_user',data: user.toJson()).then((updatedUser){
                                     // print(updatedUser!.deviceID);
                                     if(updatedUser==null) return;
@@ -131,6 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                                 TextEditingController password = TextEditingController();
                                 bool hidePassword = true;
                                 Tools.basicDialog(
+                                    onPop: () async => true,
                                     context: context,
                                     statefulBuilder: StatefulBuilder(
                                         builder: (context,setStateRegistration){

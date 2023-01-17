@@ -152,12 +152,24 @@ def getTag():
     for x in tagsJs:
         tags_get.append(x)
     return tags_get
+
 @app.route("/get_tag_where_id",methods=["GET","POST"])
 def getTagWhereID():
     id = request.form['id']
     print(id)
     tagsJs = tagDBJS.find_one({'id':id})
     return tagsJs
+
+@app.route("/get_tag_where_userid",methods=["GET","POST"])
+def getTagWhereUserID():
+    userID = request.form['userID']
+    tagsJs = tagDBJS.find({'userID':int(userID)})
+    tags = []
+    for x in tagsJs:
+        tags.append(x)
+    print(tags)
+    if tagsJs==None:return []
+    return tags
 
 @app.route("/upsert_tag/<address>/<name>/<distance>/<espID>",methods=["GET","POST"])
 def upsertTag(address,name,distance,espID):
@@ -222,6 +234,7 @@ def upsertTag(address,name,distance,espID):
                     'espID':espID,
                     'distance_right':distance_b,
                     'distance_left':distance_a,
+                    'userID':-1
                 })
             else:
                 tagDBJS.update_one({'id':id},{'$set':{'distance_right':distance_b,'distance_left':distance_a,'date_update':current_time,}})
@@ -253,11 +266,17 @@ def updateTagName():
     name = request.form['name']
     tagDBJS.update_one({'id':id},{"$set":{'name':name,}})
     return '1'
+@app.route("/update_tag_userid",methods=["GET","POST"])
+def updateTagUserID():
+    id = request.form['id']
+    userID = request.form['userID']
+    tagDBJS.update_one({'id':id},{"$set":{'userID':int(userID),}})
+    return '1'
 
 
 @app.route("/insert_esp32/<id>",methods=["GET","POST"])
 def insertESP32(id):
-    esp32 = esp32PairDBJS.insert({'_id':id,'id':id,'distance':0,'reset':0,'mode':0,'roomID':"0"})
+    esp32 = esp32PairDBJS.insert({'_id':id,'id':id,'distance':0,'reset':0,'mode':0})
     return "1"
     
 @app.route("/update_esp32_reset/<id>/<reset>",methods=["GET","POST"])
@@ -315,7 +334,7 @@ def getEsp(id):
 @app.route("/get_esp32_with_room",methods=["GET","POST"])
 def getEspWithRoom():
     roomID = request.form['roomID']
-    esp32 = json.dumps(esp32PairDBJS.find_one({"roomID":roomID}), default=str) 
+    esp32 = esp32PairDBJS.find_one({"roomID":roomID})
     return esp32
     
 
@@ -327,12 +346,19 @@ def insertRoom():
         all_room.append(x)
     userID = request.form['userID']
     name = request.form['name']
+    esp32ID = request.form['esp32ID']
+    room = roomDBJS.find_one({'userID':userID,'esp32ID':esp32ID})
+    print(room)
+    if room !=None:
+        return "0"
+
     roomDBJS.insert_one(
         {
             '_id':str(len(all_room)),
             'id':str(len(all_room)),
             'userID':userID,
-            'name':name
+            'name':name,
+            'esp32ID':esp32ID
         })
     return str(len(all_room))
 

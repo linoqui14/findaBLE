@@ -1,7 +1,7 @@
 
 class Room {
-  String id,name,userID;
-  Room({this.id = "", required this.name,required this.userID});
+  String id,name,userID,esp32ID;
+  Room({this.id = "", required this.name,required this.userID,required this.esp32ID});
 
 
   Map<String,dynamic> toJson({bool isNew = false}){
@@ -9,6 +9,7 @@ class Room {
       return {
         'userID':userID,
         'name':name,
+        'esp32ID':esp32ID,
       };
     }
 
@@ -16,6 +17,7 @@ class Room {
       'id':id.toString(),
       'userID':userID,
       'name':name,
+      'esp32ID':esp32ID,
     };
   }
 
@@ -24,6 +26,7 @@ class Room {
       id: json['id'],
       name: json['name'],
       userID:json['userID'],
+      esp32ID:json['esp32ID'],
     );
   }
 

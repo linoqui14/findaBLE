@@ -32,7 +32,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
   late TabController _tabController;
   List<Room> rooms = [];
   List<ESP> esps = [];
-
+  Tag? currentSelectedTag;
   final FlutterBlue flutterBlue = FlutterBlue.instance;
   late Timer timer;
   List<Map<String,dynamic>> tagsDevice = [];
@@ -64,7 +64,183 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
         onDidReceiveNotificationResponse: (res){
           switch(res.id){
             case 1:
-              print("New Tag");
+              String id = res.payload!;
+              print(id);
+              DBController.get(command: "get_tag_where_id", data: {"id":id.toLowerCase()}).then((value) {
+                Tag tag = Tag.toObject(jsonDecode(value!));
+                setState(() {
+                  currentSelectedTag = tag;
+                });
+                DBController.get(command: "get_esp32/${tag.espID}", data: {}).then((value) {
+                  ESP esp = ESP.toObject(jsonDecode(value!));
+                  double k = 250/esp.sensorDistance;
+                  double x=0,y=0;
+                  late Function(Function()) setStateMap;
+                  getPos(){
+                    DBController.get(command: "get_tag_pos", data: {}).then((value){
+                      Future.delayed(Duration(seconds:5), () {
+                      }).then((n) {
+                        setStateMap((){
+                          var json = jsonDecode(value!);
+                          x = json['x'];
+                          y = json['y'];
+                          getPos();
+                          print(x);
+                          print(y);
+                        });
+                      });
+                    });
+                  }
+                  getPos();
+                  Tools.basicDialog(
+                      onPop: (){
+                        setState(() {
+                          currentSelectedTag = null;
+                        });
+                        return Future<bool>.value(true);
+                      },
+                      context: context,
+                      statefulBuilder: StatefulBuilder(
+                          builder: (context,setState3){
+                            setStateMap = setState3;
+                            return Dialog(
+                              elevation: 0,
+                              backgroundColor: Colors.transparent,
+                              alignment: Alignment.center,
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("${tag.name} Location",style:GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 25) ,),
+                                    Container(
+                                      height: 330,
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.all(Radius.circular(20))
+                                      ),
+                                      child: Column(
+
+                                        children: [
+                                          // Padding(
+                                          //   padding: const EdgeInsets.all(10),
+                                          //   child: Row(
+                                          //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          //     children: [
+                                          //       Icon(Icons.sensors),
+                                          //       Icon(Icons.sensors),
+                                          //     ],
+                                          //   ),
+                                          // ),
+                                          Expanded(
+                                            child: Stack(
+                                              children: [
+                                                // Builder(
+                                                //     builder: (context) {
+                                                //       double distance = sqrt(((150-12)*(150-12))+((150-12)*(150-31)));
+                                                //       return Positioned(
+                                                //         child: Column(
+                                                //           children: [
+                                                //             Text("Distance",style: TextStyle(fontSize: 10),),
+                                                //             Text(distance.roundToDouble().toString(),style: TextStyle(fontSize: 10),),
+                                                //           ],
+                                                //         ),
+                                                //         right: (150+12)/2,
+                                                //         bottom: (150+31)/2,
+                                                //       );
+                                                //     }
+                                                // ),
+                                                // Positioned(
+                                                //   child: Column(
+                                                //     children: [
+                                                //       Icon(Icons.person_pin_circle,color: Colors.indigo,),
+                                                //       Text("You",style: TextStyle(fontSize: 10),),
+                                                //       Text("(150,150)",style: TextStyle(fontSize: 10),),
+                                                //     ],
+                                                //   ),
+                                                //   right: 150,
+                                                //   bottom: 150,
+                                                // ),
+                                                Positioned(
+                                                  child: Column(
+                                                    children: [
+                                                      Icon(Icons.sensors,color: Colors.blue,),
+                                                      // Text("${e.name}",style: TextStyle(fontSize: 10),),
+                                                      Text("(${esp.sensorDistance.toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
+                                                    ],
+                                                  ),
+                                                  right: 2,
+                                                  top: 5,
+                                                ),
+                                                Positioned(
+                                                  child: Column(
+                                                    children: [
+                                                      Icon(Icons.sensors,color: Colors.blue,),
+                                                      // Text("${esp}",style: TextStyle(fontSize: 10),),
+                                                      Text("(0,0)",style: TextStyle(fontSize: 5),),
+                                                    ],
+                                                  ),
+                                                  right: 248,
+                                                  top: 5,
+                                                ),
+                                                Positioned(
+                                                  child: Column(
+                                                    children: [
+                                                      Icon(Icons.place,color: Colors.blue,),
+                                                      Text("${tag.name}",style: TextStyle(fontSize: 10),),
+                                                      Text("(${(x).toStringAsFixed(2)},${(y).toStringAsFixed(2)})",style: TextStyle(fontSize: 5),),
+                                                    ],
+                                                  ),
+                                                  left:  (x.abs()*k).abs(),
+                                                  top: (y.abs()*k).abs(),
+                                                ),
+                                                // CustomPaint(
+                                                //   painter: LinePainter(),
+                                                // ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    // Padding(padding: EdgeInsets.only(top: 5)),
+                                    // Row(
+                                    //   children: [
+                                    //     Expanded(child: CustomTextField(hint:"Edit Name", controller: tagName,enable: isEdit,color: Colors.white,filled: true,filledColor: Colors.blue.withAlpha(200),)),
+                                    //     CustomTextButton(
+                                    //       height: 50,
+                                    //       color: isEdit?Colors.indigo:Colors.blue,
+                                    //       text: isEdit?"Save":"Edit",
+                                    //       onPressed: (){
+                                    //         setState3((){
+                                    //           if(isEdit){
+                                    //             isEdit = false;
+                                    //             if(tagName.text.isNotEmpty){
+                                    //               DBController.get(command:'update_tag_name' , data: {'id':tag.id,'name':tagName.text}).then((value) {
+                                    //                 Navigator.of(context).pop();
+                                    //               });
+                                    //             }
+                                    //
+                                    //           }else isEdit = true;
+                                    //         });
+                                    //
+                                    //       },
+                                    //     ),
+                                    //   ],
+                                    // )
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+                      )
+
+                  );
+                });
+
+              });
+              
               break;
             case 2:
               String id = res.payload!;
@@ -76,106 +252,112 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                   double k = 250/esp.sensorDistance;
                   double x=0,y=0;
                   DBController.get(command: "get_tag_pos", data: {}).then((value){
-                      var json = jsonDecode(value!);
-                      x = json['x'];
-                      y = json['y'];
-                      print(x);
-                      print(y);
-                      Tools.basicDialog(
-                          context: context,
-                          statefulBuilder: StatefulBuilder(
-                              builder: (context,setState3){
-                                return Dialog(
-                                  elevation: 0,
-                                  backgroundColor: Colors.transparent,
-                                  alignment: Alignment.center,
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text("${e.name} Location",style:GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 25) ,),
-                                        Container(
-                                          height: 330,
-                                          width: double.infinity,
-                                          decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.all(Radius.circular(20))
-                                          ),
-                                          child: Column(
-
-                                            children: [
-
-                                              Expanded(
-                                                child: Stack(
-                                                  children: [
-                                                    Positioned(
-                                                      child: Column(
-                                                        children: [
-                                                          Icon(Icons.sensors,color: Colors.blue,),
-                                                          Text("${e.name}",style: TextStyle(fontSize: 10),),
-                                                          Text("(${esp.sensorDistance.toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
-                                                        ],
-                                                      ),
-                                                      right: 2,
-                                                      top: 5,
-                                                    ),
-                                                    Positioned(
-                                                      child: Column(
-                                                        children: [
-                                                          Icon(Icons.sensors,color: Colors.blue,),
-                                                          // Text("${esp}",style: TextStyle(fontSize: 10),),
-                                                          Text("(0,0)",style: TextStyle(fontSize: 5),),
-                                                        ],
-                                                      ),
-                                                      right: 248,
-                                                      top: 5,
-                                                    ),
-                                                    Positioned(
-                                                      child: Column(
-                                                        children: [
-                                                          Icon(Icons.place,color: Colors.blue,),
-                                                          Text("${e.name}",style: TextStyle(fontSize: 10),),
-                                                          Text("(${(x).toStringAsFixed(2)},${(y).toStringAsFixed(2)})",style: TextStyle(fontSize: 5),),
-                                                        ],
-                                                      ),
-                                                      left:  (x.abs()*k).abs(),
-                                                      top: (y.abs()*k).abs(),
-                                                    ),
-                                                    // CustomPaint(
-                                                    //   painter: LinePainter(),
-                                                    // ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                    var json = jsonDecode(value!);
+                    x = json['x'];
+                    y = json['y'];
+                    print(x);
+                    print(y);
+                    Tools.basicDialog(
+                        onPop: (){
+                          setState(() {
+                            currentSelectedTag = null;
+                          });
+                          return Future<bool>.value(true);
+                        },
+                        context: context,
+                        statefulBuilder: StatefulBuilder(
+                            builder: (context,setState3){
+                              return Dialog(
+                                elevation: 0,
+                                backgroundColor: Colors.transparent,
+                                alignment: Alignment.center,
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text("${e.name} Location",style:GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 25) ,),
+                                      Container(
+                                        height: 330,
+                                        width: double.infinity,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.all(Radius.circular(20))
                                         ),
-                                        Padding(padding: EdgeInsets.only(top: 5)),
-                                        Center(child: Column(
+                                        child: Column(
+
                                           children: [
-                                            Text("Last Location Time Date",style: TextStyle(color: Colors.white),),
-                                            Text(date,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),),
+
+                                            Expanded(
+                                              child: Stack(
+                                                children: [
+                                                  Positioned(
+                                                    child: Column(
+                                                      children: [
+                                                        Icon(Icons.sensors,color: Colors.blue,),
+                                                        Text("${e.name}",style: TextStyle(fontSize: 10),),
+                                                        Text("(${esp.sensorDistance.toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
+                                                      ],
+                                                    ),
+                                                    right: 2,
+                                                    top: 5,
+                                                  ),
+                                                  Positioned(
+                                                    child: Column(
+                                                      children: [
+                                                        Icon(Icons.sensors,color: Colors.blue,),
+                                                        // Text("${esp}",style: TextStyle(fontSize: 10),),
+                                                        Text("(0,0)",style: TextStyle(fontSize: 5),),
+                                                      ],
+                                                    ),
+                                                    right: 248,
+                                                    top: 5,
+                                                  ),
+                                                  Positioned(
+                                                    child: Column(
+                                                      children: [
+                                                        Icon(Icons.place,color: Colors.blue,),
+                                                        Text("${e.name}",style: TextStyle(fontSize: 10),),
+                                                        Text("(${(x).toStringAsFixed(2)},${(y).toStringAsFixed(2)})",style: TextStyle(fontSize: 5),),
+                                                      ],
+                                                    ),
+                                                    left:  (x.abs()*k).abs(),
+                                                    top: (y.abs()*k).abs(),
+                                                  ),
+                                                  // CustomPaint(
+                                                  //   painter: LinePainter(),
+                                                  // ),
+                                                ],
+                                              ),
+                                            ),
                                           ],
-                                        ))
+                                        ),
+                                      ),
+                                      Padding(padding: EdgeInsets.only(top: 5)),
+                                      Center(child: Column(
+                                        children: [
+                                          Text("Last Location Time Date",style: TextStyle(color: Colors.white),),
+                                          Text(date,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),),
+                                        ],
+                                      ))
 
-                                      ],
-                                    ),
+                                    ],
                                   ),
-                                );
-                              }
-                          )
+                                ),
+                              );
+                            }
+                        )
 
-                      );
+                    );
 
                   });
 
                 });
 
-                
+
               });
 
-              
+
               break;
           }
 
@@ -219,7 +401,22 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
           int tagCount = 0;
           for(var result in element){
 
-            if(result.device.name.contains("iTAG")){
+            if(result.device.name.toLowerCase().contains("tag")){
+              double distance =  pow(10,(((-77) - (result.rssi))/(10*2.5))).toDouble();
+              print("adasdasdasdsssssssssssssssssssssss");
+              if(currentSelectedTag!=null){
+                if(distance<=0.5&&result.device.id.id.toLowerCase() == currentSelectedTag!.id.toLowerCase()){
+                  DBController.get(command: 'get_tag_where_id', data: {'id':result.device.id.id.toLowerCase()}).then((value) {
+                    var json = jsonDecode(value!);
+                    flutterLocalNotificationsPlugin.show(3, 'Findable',
+                        'Tag named ${json['name']}  is near! ${distance.toStringAsFixed(3)} meters',
+                        platformChannelSpecifics, payload: '${result.device.id.id}'
+                    );
+
+
+                  });
+                }
+              }
 
               if(tagsDevice.where((tDevice) => tDevice['id']==result.device.id.id ).isEmpty){
 
@@ -233,7 +430,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                   var json = jsonDecode(value!);
                   flutterLocalNotificationsPlugin.show(1, 'Findable',
                       'Tag named ${json['name']}  is detected!',
-                      platformChannelSpecifics, payload: 'Default_Sound,${result.device.id.id}'
+                      platformChannelSpecifics, payload: '${result.device.id.id}'
                   );
                 });
 
@@ -244,8 +441,8 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
 
           for(var tdvice in tagsDevice){
 
-            print(tdvice['count']);
-            if(tdvice['count']>=15&&!tdvice['isNotified']){
+            // print(tdvice['count']);
+            if(tdvice['count']>=30&&!tdvice['isNotified']){
               tdvice['isNotified'] = true;
               DBController.get(command: 'get_tag_where_id', data: {'id':tdvice['id'].toString().toLowerCase()}).then((value) {
                 var json = jsonDecode(value!);
@@ -308,6 +505,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                 TextEditingController password = TextEditingController(text: widget.user.password);
                 bool showPassword = false,isEdit = false;
                 Tools.basicDialog(context: context,
+                    onPop: () async => true,
                     statefulBuilder: StatefulBuilder(
                       builder: (context,setState1){
                         return Dialog(
@@ -487,15 +685,12 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                 children: rooms.map((room) {
                                   // ESP esp = esps.where((element) =>element.roomID == room.id).first;
                                   return  FutureBuilder<String?>(
-                                      future: DBController.get(command: 'get_esp32_with_room', data: {'roomID':room.id.toString()}),
+                                      future: DBController.get(command: 'get_esp32/${room.esp32ID}', data: {}),
                                       builder: (context,snapshot) {
                                         if(!snapshot.hasData)return Center();
                                         if(snapshot.connectionState==ConnectionState.waiting)return Center(child: CircularProgressIndicator(),);
-                                        print(snapshot.data);
                                         var jsons = jsonDecode(snapshot.data!);
-                                        print(jsons);
                                         ESP esp = ESP.toObject(jsons);
-
                                         late Function(void Function()) stateDistanceFunction;
                                         getESP(){
                                           DBController.get(command: "get_esp32/${esp.id}", data: {}).then((value) {
@@ -506,10 +701,9 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                 getESP();
                                               });
                                             });
-
-
                                           });
                                         }
+
                                         getESP();
                                         return StatefulBuilder(
                                             builder: (context,setState1) {
@@ -529,28 +723,22 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                     padding: const EdgeInsets.all(10),
                                                     child: Column(
                                                       children: [
-                                                        Row(
-                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                          children: [
-                                                            Text(room.id,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white),),
-                                                            Text(room.name.toUpperCase(),style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white),),
-                                                            // Row(
-                                                            //   crossAxisAlignment: CrossAxisAlignment.start,
-                                                            //   children: [
-                                                            //     Text(tags.where((element) => room.id==element.roomID).length.toString(),style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white),),
-                                                            //     Text(tags.where((element) => room.id==element.roomID).length>1?' tags':' tag',style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white,fontSize: 10),),
-                                                            //   ],
-                                                            // ),
-
-                                                          ],
-                                                        ),
                                                         Column(
+                                                          mainAxisAlignment: MainAxisAlignment.start,
+                                                          crossAxisAlignment: CrossAxisAlignment.center,
                                                           children: [
                                                             Row(
                                                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                               children: [
-                                                                Text(esp.id,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white),),
+                                                                Column(
+                                                                  children: [
+                                                                    Text("Room Name",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white,fontSize: 8),),
+                                                                    Text(room.name.toUpperCase(),style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 12),),
+                                                                  ],
+                                                                ),
+                                                                // Text(esp.id,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white),),
                                                                 CustomTextButton(
+                                                                  width:110,
                                                                   onPressed: (){
                                                                     DBController.get(command: "update_esp32_reset/${esp.id}/1", data: {}).then((value) {
                                                                       print(value);
@@ -563,19 +751,33 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                   },
                                                                   color: Colors.blue,
                                                                   style: TextStyle(fontSize: 8,color: Colors.white),
-                                                                  text: "Mode: "+(esp.mode==0?"Scan":"Get ESP distance"),
+                                                                  text: "Change Mode",
                                                                 ),
-                                                                Text(esp.mode.toString(),style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white),),
-
-
-
                                                               ],
                                                             ),
-                                                            Column(
-                                                                children: [
-                                                                  Text(esp.sensorDistance.toStringAsPrecision(2)+"m",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white),)
-                                                                ]
-                                                            ),
+                                                            Row(
+                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                              children: [
+                                                                Column(
+                                                                  children: [
+                                                                    Text("ESP ID",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white,fontSize: 8),),
+                                                                    Text(esp.id,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 8),),
+                                                                  ],
+                                                                ),
+                                                                Column(
+                                                                  children: [
+                                                                    Text("Distance Between ESPs",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white,fontSize: 8),),
+                                                                    Text(esp.sensorDistance.toStringAsPrecision(2)+"m",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 8),),
+                                                                  ],
+                                                                ),
+                                                                Column(
+                                                                  children: [
+                                                                    Text("ESP Current Mode",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white,fontSize: 8),),
+                                                                    Text(esp.mode==1?"Getting ESP Distance":"Finding Tags",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 8),),
+                                                                  ],
+                                                                ),
+                                                              ],
+                                                            )
                                                           ],
                                                         ),
                                                       ],
@@ -585,7 +787,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                     SizedBox(
                                                       height: 100,
                                                       child: FutureBuilder<String?>(
-                                                          future:DBController.get(command: "get_tag", data: {"esp32":esp.id}),
+                                                          future:DBController.get(command: "get_tag_where_userid", data: {"userID":widget.user.id.toString()}),
                                                           builder: (context, snapshot) {
                                                             if(!snapshot.hasData)return Center();
                                                             if(snapshot.connectionState==ConnectionState.waiting)return Center(child: CircularProgressIndicator(),);
@@ -606,19 +808,23 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                               children: tags.map((e){
                                                                 return Padding(
                                                                   padding: const EdgeInsets.symmetric(horizontal: 27),
-                                                                  child: Container(
-                                                                      padding: EdgeInsets.all(10),
-                                                                      margin: EdgeInsets.only(bottom: 10),
-                                                                      decoration: BoxDecoration(
-                                                                          color: Colors.indigo,
-                                                                          borderRadius: BorderRadius.all(Radius.circular(20))
-                                                                      ),
-                                                                      child: Row(
-                                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                        children: [
-                                                                          Expanded(
-                                                                            child: GestureDetector(
+                                                                  child: Expanded(
+                                                                    child: Container(
+                                                                        padding: EdgeInsets.all(10),
+                                                                        margin: EdgeInsets.only(bottom: 10),
+                                                                        decoration: BoxDecoration(
+                                                                            color: Colors.indigo,
+                                                                            borderRadius: BorderRadius.all(Radius.circular(20))
+                                                                        ),
+                                                                        child: Row(
+                                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                          children: [
+                                                                            Expanded(
+                                                                              child: GestureDetector(
                                                                                 onTap: (){
+                                                                                  setState(() {
+                                                                                    currentSelectedTag = e;
+                                                                                  });
                                                                                   TextEditingController tagName = TextEditingController(text: e.name);
                                                                                   bool isEdit = false;
                                                                                   double k = 250/esp.sensorDistance;
@@ -642,7 +848,6 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
 
 
 
-
                                                                                     });
 
 
@@ -650,13 +855,16 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
 
                                                                                   getPos();
                                                                                   Tools.basicDialog(
+                                                                                      onPop: (){
+                                                                                        setState(() {
+                                                                                          currentSelectedTag = null;
+                                                                                        });
+                                                                                        return Future<bool>.value(true);
+                                                                                      },
                                                                                       context: context,
                                                                                       statefulBuilder: StatefulBuilder(
                                                                                           builder: (context,setState3){
                                                                                             setStateMap = setState3;
-
-
-
                                                                                             return Dialog(
                                                                                               elevation: 0,
                                                                                               backgroundColor: Colors.transparent,
@@ -792,13 +1000,44 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
 
                                                                                   );
                                                                                 },
-                                                                                child: Text(e.name,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.normal,color: Colors.white,fontSize: 10),)
+                                                                                child: Text(e.name,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 10),),
+                                                                              ),
                                                                             ),
-                                                                          ),
+                                                                            GestureDetector(
+                                                                              onLongPress: (){
+                                                                                DBController.get(command: "update_tag_userid", data: {"id":e.id,"userID":(-1).toString()}).then((value) {
+                                                                                  if(value=="1"){
+                                                                                    Tools.basicDialog(context: context,
+                                                                                        onPop: () async => false,
+                                                                                        statefulBuilder: StatefulBuilder(
 
-
-                                                                        ],
-                                                                      )
+                                                                                            builder: (context,state){
+                                                                                              return AlertDialog(
+                                                                                                title: Text("Deleted"),
+                                                                                                content: Text("This tag ${e.name} is deleted!"),
+                                                                                                actions: [
+                                                                                                  CustomTextButton(
+                                                                                                    color:Colors.red,
+                                                                                                    onPressed: (){Navigator.of(context).pop();},
+                                                                                                    text: "Confirm",
+                                                                                                  )
+                                                                                                ],
+                                                                                              );
+                                                                                            }
+                                                                                        )
+                                                                                    );
+                                                                                  }
+                                                                                });
+                                                                              },
+                                                                              child: Icon(
+                                                                                size:15,
+                                                                                Icons.close,
+                                                                                color: Colors.white70,
+                                                                              ),
+                                                                            )
+                                                                          ],
+                                                                        )
+                                                                    ),
                                                                   ),
                                                                 );
                                                               }).toList(),
@@ -806,69 +1045,107 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                           }
                                                       ),
                                                     ),
-                                                    // IconButton(
-                                                    //   icon:Icon(Icons.add,color: Colors.white,),
-                                                    //   onPressed: () {
-                                                    //     TextEditingController tagName = TextEditingController();
-                                                    //     Tools.basicDialog(
-                                                    //         context: context,
-                                                    //         statefulBuilder: StatefulBuilder(
-                                                    //           builder: (contex,setState2){
-                                                    //             return Dialog(
-                                                    //               elevation: 0,
-                                                    //               alignment: Alignment.center,
-                                                    //               backgroundColor: Colors.transparent,
-                                                    //               child: Column(
-                                                    //                 mainAxisAlignment: MainAxisAlignment.center,
-                                                    //                 crossAxisAlignment: CrossAxisAlignment.start,
-                                                    //                 children: [
-                                                    //                   Padding(
-                                                    //                     padding: const EdgeInsets.only(left: 20.0),
-                                                    //                     child: Text('Tag',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 18),),
-                                                    //                   ),
-                                                    //                   Container(
-                                                    //                     padding: EdgeInsets.all(20),
-                                                    //                     width: double.infinity,
-                                                    //                     height: 100,
-                                                    //                     decoration: BoxDecoration(
-                                                    //                         color: Colors.white,
-                                                    //                         borderRadius: BorderRadius.only(topLeft:Radius.circular(20),topRight: Radius.circular(20),bottomRight: Radius.circular(20))
-                                                    //                     ),
-                                                    //                     child: Column(
-                                                    //                       children: [
-                                                    //                         CustomTextField(
-                                                    //                           hint: "Name",
-                                                    //                           controller: tagName,
-                                                    //                           color: Colors.blue,
-                                                    //                         )
-                                                    //                       ],
-                                                    //                     ),
-                                                    //                   ),
-                                                    //                   // CustomTextButton(
-                                                    //                   //   rTopRight: 20,
-                                                    //                   //   rBottomRight: 20,
-                                                    //                   //   rTopLeft: 0,
-                                                    //                   //   rBottomLeft: 20,
-                                                    //                   //   color: Colors.blue,
-                                                    //                   //   text: "Add",
-                                                    //                   //   onPressed: (){
-                                                    //                   //     setState(() {
-                                                    //                   //       Tag tag = Tag(id: (tags.length+1).toString(), name: tagName.text, roomID: room.id.toString(),x: 0,y: 0);
-                                                    //                   //       tags.add(tag);
-                                                    //                   //     });
-                                                    //                   //     Navigator.of(context).pop();
-                                                    //                   //   },
-                                                    //                   // ),
-                                                    //                 ],
-                                                    //               ),
-                                                    //             );
-                                                    //           },
-                                                    //         )
-                                                    //     );
-                                                    //   },
-                                                    //
-                                                    //
-                                                    // )
+                                                    IconButton(
+                                                      icon:Icon(Icons.add,color: Colors.white,),
+                                                      onPressed: () {
+                                                        TextEditingController tagName = TextEditingController();
+                                                        Tools.basicDialog(
+                                                            onPop: () async => true,
+                                                            context: context,
+                                                            statefulBuilder: StatefulBuilder(
+                                                              builder: (contex,setState2){
+                                                                return Dialog(
+                                                                  elevation: 0,
+                                                                  alignment: Alignment.center,
+                                                                  backgroundColor: Colors.transparent,
+                                                                  child: Column(
+                                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                    children: [
+                                                                      Padding(
+                                                                        padding: const EdgeInsets.only(left: 20.0),
+                                                                        child: Text('Available Tags',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 18),),
+                                                                      ),
+                                                                      Container(
+                                                                        padding: EdgeInsets.all(20),
+                                                                        width: double.infinity,
+                                                                        height: 300,
+                                                                        decoration: BoxDecoration(
+                                                                            color: Colors.white,
+                                                                            borderRadius: BorderRadius.all(Radius.circular(20))
+                                                                        ),
+                                                                        child: Column(
+                                                                          children: [
+
+                                                                            Expanded(
+                                                                                child: FutureBuilder<String?>(
+                                                                                  future: DBController.get(command: "get_tag_where_userid", data: {"userID":(-1).toString()}),
+                                                                                  builder: (context, snapshot) {
+                                                                                    if(!snapshot.hasData)return Center();
+                                                                                    if(snapshot.connectionState==ConnectionState.waiting)return Center(child: CircularProgressIndicator(),);
+                                                                                    List<Tag> tags = [];
+                                                                                    var jsons = jsonDecode(snapshot.data!);
+                                                                                    for(var x in jsons){
+                                                                                      Tag tag = Tag.toObject(x);
+                                                                                      tags.add(tag);
+                                                                                    }
+                                                                                    return ListView(
+                                                                                      children: tags.map((tag) {
+                                                                                        return Container(
+                                                                                            padding: EdgeInsets.all(10),
+                                                                                            margin: EdgeInsets.only(bottom: 10),
+                                                                                            decoration: BoxDecoration(
+                                                                                                color: Colors.indigo,
+                                                                                                borderRadius: BorderRadius.all(Radius.circular(20))
+                                                                                            ),
+                                                                                            child: Row(
+                                                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                                              children: [
+                                                                                                Expanded(
+                                                                                                  child: GestureDetector(
+                                                                                                      onTap: (){
+                                                                                                        DBController.get(command: "update_tag_userid", data: {"id":tag.id,"userID":widget.user.id.toString()}).then((value) {
+                                                                                                          if(value=="1"){
+                                                                                                            Navigator.of(context).pop();
+                                                                                                          }
+                                                                                                        });
+                                                                                                      },
+                                                                                                      child: Column(
+
+                                                                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                                        children: [
+                                                                                                          Text(tag.name,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 10),),
+                                                                                                          Text(tag.id,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white,fontSize: 10),),
+                                                                                                        ],
+                                                                                                      )
+                                                                                                  ),
+                                                                                                ),
+
+
+                                                                                              ],
+                                                                                            )
+                                                                                        );
+                                                                                      }).toList(),
+                                                                                    );
+                                                                                  },
+                                                                                )
+                                                                            )
+
+
+                                                                          ],
+                                                                        ),
+                                                                      ),
+
+                                                                    ],
+                                                                  ),
+                                                                );
+                                                              },
+                                                            )
+                                                        );
+                                                      },
+
+
+                                                    )
                                                   ],
                                                 ),
                                               );
@@ -895,6 +1172,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
               switch(_tabController.index){
                 case 0:
                   Tools.basicDialog(
+                      onPop: () async => true,
                       context: context,
                       statefulBuilder: StatefulBuilder(
                         builder: (contex,setState1){
@@ -945,20 +1223,25 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                       DBController.get(command: "get_esp32/${ESP32ID.text}", data: {}).then((esp32) {
 
                                         if(esp32![0]=='{'){
-                                          Room room = Room(name: roomName.text, userID: widget.user.id.toString());
-                                          DBController.get(command: 'insert_room/', data: {'userID':widget.user.id.toString(),'name':room.name}).then((room){
+                                          ESP esp = ESP.toObject(jsonDecode(esp32));
+                                          Room room = Room(name: roomName.text, userID: widget.user.id.toString(),esp32ID: esp.id);
+                                          DBController.get(command: 'insert_room/', data: room.toJson(isNew: true)).then((room){
                                             print(room);
-                                            ESP esp = ESP.toObject(jsonDecode(esp32));
-                                            DBController.post(command: "update_esp32_room", data: {'id':esp.id,'roomID':room}).then((value) {
-                                              setState(() {
+                                            // ESP esp = ESP.toObject(jsonDecode(esp32));
+                                            // DBController.post(command: "update_esp32_room", data: {'id':esp.id,'roomID':room}).then((value) {
+                                            //   setState(() {
+                                            //
+                                            //     // Room room = Room(id: (rooms.length+1).toString(), name: roomName.text, userID: widget.user.id.toString());
+                                            //     // rooms.add(room);
+                                            //     // esp.roomID = room.id;
+                                            //     // if(esps.where((element) => element.id==esp.id).isEmpty)esps.add(esp);
+                                            //   });
+                                            //   Navigator.of(context).pop();
+                                            // });
+                                            setState((){
 
-                                                // Room room = Room(id: (rooms.length+1).toString(), name: roomName.text, userID: widget.user.id.toString());
-                                                // rooms.add(room);
-                                                // esp.roomID = room.id;
-                                                // if(esps.where((element) => element.id==esp.id).isEmpty)esps.add(esp);
-                                              });
-                                              Navigator.of(context).pop();
                                             });
+                                            Navigator.of(context).pop();
 
                                           });
 
@@ -980,6 +1263,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                   break;
                 case 1:
                   Tools.basicDialog(
+                      onPop: () async => true,
                       context: context,
                       statefulBuilder: StatefulBuilder(
                         builder: (contex,setState1){
