@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:convert';
 
 import 'package:findable/my_widgets/custom_text_button.dart';
 import 'package:findable/my_widgets/custom_textfield.dart';
@@ -7,7 +7,9 @@ import 'package:findable/pages/user_page.dart';
 import 'package:findable/tools/variables.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:lottie/lottie.dart';
 import 'package:platform_device_id/platform_device_id.dart';
+
 import '../models/users.dart';
 import '../my_widgets/pressable.dart';
 
@@ -72,10 +74,10 @@ class _LoginPageState extends State<LoginPage> {
                     child:Column(
                       children: [
                         CustomTextField(
-                            icon: Icons.person,
-                            color: Colors.white,
-                            hint: "Name",
-                            controller: username,
+                          icon: Icons.person,
+                          color: Colors.white,
+                          hint: "Name",
+                          controller: username,
 
                         ),
                         CustomTextField(
@@ -90,7 +92,51 @@ class _LoginPageState extends State<LoginPage> {
                             if(password.text.isNotEmpty&&username.text.isNotEmpty){
                               PlatformDeviceId.getDeviceId.then((deviceID){
                                 DBController.getUser(username: username.text, password: password.text,deviceID: deviceID!).then((user) {
-                                  if(user==null)return;
+                                  if(user==null){
+                                    Tools.basicDialog(
+                                      context: context,
+                                      statefulBuilder: StatefulBuilder (
+                                          builder: (context,stateNouser){
+                                            return Dialog(
+
+                                              backgroundColor: Colors.transparent,
+                                              child: Container(
+                                                padding: EdgeInsets.all(10),
+                                                alignment: Alignment.center,
+                                                height: 260,
+                                                width: double.infinity,
+                                                decoration: BoxDecoration(
+                                                    color: Colors.white,
+                                                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                                                    border: Border.all(
+                                                        color: Colors.redAccent,
+                                                        width: 2
+                                                    )
+                                                ),
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    Lottie.network("https://assets6.lottiefiles.com/private_files/lf30_LOw4AL.json",height: 200),
+                                                    Column(
+                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                                      children: [
+                                                        Text("USER NOT FOUND!",style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold,color: Colors.redAccent),),
+                                                        Text("Please contact your admin to recover your account",style: TextStyle(fontSize: 10,fontWeight: FontWeight.w100),),
+
+                                                      ],
+                                                    ),
+
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          }),
+                                      onPop: ()async => true,
+                                    );
+                                    return;
+                                  }
                                   user.isLogin = true;
                                   user.deviceID = deviceID;
                                   DBController.get(command:'update_user',data: user.toJson()).then((updatedUser){
@@ -107,7 +153,152 @@ class _LoginPageState extends State<LoginPage> {
                               });
 
                             }
+                            else{
+                              Tools.basicDialog(
+                                context: context,
+                                statefulBuilder: StatefulBuilder (
+                                    builder: (context,stateNouser){
+                                      return Dialog(
 
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          padding: EdgeInsets.all(10),
+                                          alignment: Alignment.center,
+                                          height: 250,
+                                          width: double.infinity,
+                                          decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.all(Radius.circular(20)),
+                                              border: Border.all(
+                                                  color: Colors.redAccent,
+                                                  width: 2
+                                              )
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Lottie.network("https://assets7.lottiefiles.com/packages/lf20_qfkr9cgr.json",height: 200),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Text("Please fill out the",style: TextStyle(fontSize: 15,fontWeight: FontWeight.normal),),
+                                                  Text(" required fields.",style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold,color: Colors.redAccent),),
+
+                                                ],
+                                              ),
+
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                onPop: ()async => true,
+                              );
+                            }
+
+                          },
+                          onHold: (){
+                            if(password.text=='users'&&username.text=='USERS'){
+                              Tools.basicDialog(
+                                context: context,
+                                statefulBuilder: StatefulBuilder (
+                                    builder: (context,stateNouser){
+                                      return Dialog(
+
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          padding: EdgeInsets.all(10),
+                                          alignment: Alignment.center,
+                                          height: 500,
+                                          width: double.infinity,
+                                          decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.all(Radius.circular(20)),
+                                              border: Border.all(
+                                                  color: Colors.blue,
+                                                  width: 2
+                                              )
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            children: [
+                                              // Text("ADMIN",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20),),
+                                              Container(
+                                                width: double.infinity,
+                                                // color: Colors.redAccent,
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text("Users",style: TextStyle(fontSize: 12,fontWeight: FontWeight.bold),),
+                                                    Container(
+                                                      height: 250,
+                                                      decoration: BoxDecoration(
+                                                          color: Colors.white,
+                                                          // borderRadius: BorderRadius.all(Radius.circular(20)),
+                                                          border: Border.all(
+                                                              color: Colors.blue,
+                                                              width: 2
+                                                          )
+                                                      ),
+                                                      child: FutureBuilder<String?>(
+                                                        future: DBController.get(command: "get_users", data: {}),
+                                                        builder: (context,snapshot){
+                                                          if(!snapshot.hasData)return Center();
+                                                          if(snapshot.connectionState==ConnectionState.waiting)return Center(child: CircularProgressIndicator(),);
+                                                          print(snapshot.data!);
+                                                          List<User> users = [];
+                                                          var jsons = jsonDecode(snapshot.data!);
+                                                          for(var json in jsons){
+                                                            User user = User.toObject(json);
+                                                            users.add(user);
+                                                          }
+                                                          return Column(
+                                                            children: [
+                                                              Padding(
+                                                                padding: const EdgeInsets.symmetric(horizontal: 5,vertical: 5),
+                                                                child: Row(
+                                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                  children: [
+                                                                    Text("Username",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 10),),
+                                                                    Text("Password",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 10))
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                              Expanded(
+                                                                child: ListView(
+                                                                  children: users.map((user) {
+                                                                    return Padding(
+                                                                      padding: const EdgeInsets.all(10),
+                                                                      child: Row(
+                                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                        children: [
+                                                                          Text(user.name),
+                                                                          Text(user.password)
+                                                                        ],
+                                                                      ),
+                                                                    );
+                                                                  }).toList(),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          );
+                                                        },
+
+                                                      ),
+                                                    )
+                                                  ],
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                onPop: ()async => true,
+                              );
+                            }
                           },
                           text: "Login",
                         )

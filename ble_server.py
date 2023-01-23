@@ -16,6 +16,7 @@ dbUserJS=db['users']
 roomDBJS=db['rooms']
 tagDBJS=db['tags']
 esp32PairDBJS=db['esps']
+logDB=db['logDB']
 
 # dbUserJS = TinyDB('user.json')
 # roomDBJS = TinyDB('room.json')
@@ -32,9 +33,10 @@ import cmath
 
 espDistances = []
 tags = []
-
-def tag_pos(a, b, c):
-
+tagsWithRDistance = []
+def tag_pos(a, b, c,id):
+    isRecorded = False
+    currentTag = []
     # p = (a + b + c) / 2.0
     # s = cmath.sqrt(p * (p - a) * (p - b) * (p - c))
     # y = 2.0 * s / c
@@ -42,39 +44,132 @@ def tag_pos(a, b, c):
     cos_a = (((b * b) + (c*c) - (a * a))) / (2 * b * c)
     x = b * cos_a
     y = b * cmath.sqrt(1 - (cos_a * cos_a))
-    print({'x':round(x.real, 1), 'y':round(y.real, 1)})
-    return {'x':round(x.real, 1), 'y':round(y.real, 1)}
+    for tagwd in tagsWithRDistance:
+        if tagwd['id'] == id:
+            isRecorded = True
+            break
 
+    if isRecorded:
+        for tag in tagsWithRDistance:
+            if tag['id'] == id:
+                xTotal = 0
+                yTotal = 0
+                xAVG = 0
+                yAVG = 0
+                for xv in tag['x']:
+                    xTotal+=xv
+                for yv in tag['y']:
+                    yTotal+=yv
+                xAVG = xTotal/len(tag['x'])
+                yAVG = yTotal/len(tag['y'])
+                tag['x'].append(x)
+                tag['y'].append(y)
+                return {'x':round(xAVG.real, 2), 'y':round(yAVG.real, 2)}
+                
+        pass
+    else:
+        tagsWithRDistance.append({
+            'id':id,
+            'x':[x,],
+            'y':[y,]
+        })
+    
+    return {'x':round(x.real, 2), 'y':round(y.real, 2)}
+@app.route("/reset_tag_pos" , methods=["GET","POST"])
+def resetTagPos():
+    tagID = request.form['tagID']
+    for x in tagsWithRDistance:
+        if x['id'] == tagID:
+            x['x'] = [0,]
+            x['y'] = [0,]
+            break
+    return ""
+
+def resetTagPosHalf(tagID):
+    for x in tagsWithRDistance:
+        if x['id'] == tagID:
+            x['x'].clear()
+            x['y'].clear()
+            break
+    return ""
 @app.route("/get_tag_pos" , methods=["GET","POST"])
 def getTagPos():
+    tagID = request.form['tagID']
     try:
         c = esp32PairDBJS.find_one({'id':"1011"})
         c = c['distance']
-        tag = tagDBJS.find_one({'espID':"1011"})
+        tag = tagDBJS.find_one({'id':tagID})
         b = tag['distance_left']
         a = tag['distance_right']
-        return tag_pos(a,b,c)
+        pos = tag_pos(a,b,c,tag['id'])
+        for x in tagsWithRDistance:
+            if x['id'] == tag['id']:
+                print(len(x['x']))
+                if len(x['x'])>=20:
+                    return pos
+                if len(x['x'])>=35:
+                    # resetTagPosHalf(tagID)
+                    pass
+                break
+        
+        return {"x":-1.0,'y':-1.0,'len':len(x['x'])}
     except:
         filtered_distances = kalman_filter(espDistances,A=1, H=1, Q=1.6, R=6)
         print(len(espDistances))
-        if len(espDistances)>10:
+        if len(espDistances)>20:
             total = 0
             for x in espDistances:
                 total+=x
             avg = round(total/len(espDistances),2)
         
-        distance = round(pow(10,((avg) - (filtered_distances[-1]))/(10*2.5)),3)
+        distance = round(pow(10,((avg) - (filtered_distances[-1]))/(10*2.5)),2)
 
         c = distance
         tag = tagDBJS.find_one({'espID':"1011"})
         if(tag==None):
-            return {'x':0, 'y':0}
+            return {"x":-1.0,'y':-1.0,'len':len(x['x'])}
 
         b = tag['distance_left']
         a = tag['distance_right']
-        return tag_pos(a,b,c) 
-   
 
+        pos = tag_pos(a,b,c,tag['id'])
+        for x in tagsWithRDistance:
+            if x['id'] == tag['id']:
+                if len(x['x'])>=20:
+                    return pos
+                break
+        
+        return {"x":-1.0,'y':-1.0,'len':len(x['x'])}
+
+@app.route("/get_logs" , methods=["GET","POST"])
+def getLogs():
+    userID = request.form['userID']
+    logs = []
+    logsJS = logDB.find({'userID':userID})
+    for x in logsJS:
+        logs.append(x)
+    return logs
+
+@app.route("/add_log" , methods=["GET","POST"])
+def addLog():
+    userID = request.form['userID']
+    roomID = request.form['roomID']
+    status = request.form['status']
+    current_time = datetime.datetime.now()
+    size = logDB.find()
+    count = 0
+    for x in size:
+        count+=1
+    
+    logDB.insert_one({
+        '_id':count,
+        'id':count,
+        'userID':userID,
+        'roomID':roomID,
+        'status':status,
+        'log_time':current_time
+    })
+    return ""
 @app.route("/insert_user/<codep>" , methods=["GET","POST"])
 def insertUser(codep):
     if codep!=code:
@@ -133,12 +228,13 @@ def getCurrentLogin(codep):
 
     return user
 
-@app.route("/get_users")
+@app.route("/get_users",methods=["GET","POST"])
 def getUsers():
     users = []
     usersJS = dbUserJS.find()
     for x in usersJS:
-        users.append(json.dumps(x, default=str) )
+        users.append(x)
+    print(users)
     return users
 
 @app.route("/is_connected")
@@ -159,6 +255,13 @@ def getTagWhereID():
     print(id)
     tagsJs = tagDBJS.find_one({'id':id})
     return tagsJs
+@app.route("/get_tag_where_id_userid",methods=["GET","POST"])
+def getTagWhereIDUserID():
+    id = request.form['id']
+    userID = request.form['userID']
+    print(id)
+    tagsJs = tagDBJS.find_one({'id':id,'userID':int(userID)})
+    return tagsJs
 
 @app.route("/get_tag_where_userid",methods=["GET","POST"])
 def getTagWhereUserID():
@@ -174,6 +277,7 @@ def getTagWhereUserID():
 @app.route("/upsert_tag/<address>/<name>/<distance>/<espID>",methods=["GET","POST"])
 def upsertTag(address,name,distance,espID):
     id = address
+    # print(id)
     distance = distance.split('(-)')
     position = distance[1]
     distance = distance[0]
@@ -210,22 +314,25 @@ def upsertTag(address,name,distance,espID):
         if len(this_tag['distance_left'])>5 and len(this_tag['distance_right'])>10:
             filtered_distance_left = kalman_filter(this_tag['distance_left'][1:],A=1, H=1, Q=1.6, R=6)
             filtered_distance_right = kalman_filter(this_tag['distance_right'][1:],A=1, H=1, Q=1.6, R=6)
+            filtered_distance_left_particle = particle_filter(filtered_distance_left,A=1, H=1, Q=1.6, R=6,quant_particles=100)
+            filtered_distance_right_particle = particle_filter(filtered_distance_right,A=1, H=1, Q=1.6, R=6,quant_particles=100)
             total_a = 0
             total_b = 0
-            for x in filtered_distance_left:
+            for x in filtered_distance_left_particle:
                 total_a+=x
-            for y in filtered_distance_right:
+            for y in filtered_distance_right_particle:
                 total_b+=y
 
-            avg_a = round(total_a/len(filtered_distance_left),2)
-            avg_b = round(total_b/len(filtered_distance_right),2)
+            avg_a = round(total_a/len(filtered_distance_left_particle),2)
+            avg_b = round(total_b/len(filtered_distance_right_particle),2)
             
-            distance_a = round(pow(10,((-77) - (filtered_distance_left[-1]))/(10*2.5)),3)
-            distance_b = round(pow(10,((-77) - (filtered_distance_right[-1]))/(10*2.5)),3)
+            distance_a = round(pow(10,((avg_a) - (filtered_distance_left_particle[-1]))/(10*2.5)),2)
+            distance_b = round(pow(10,((avg_b) - (filtered_distance_right_particle[-1]))/(10*2.5)),2)
         #     # print(filtered_distance_left)
         #     # print(filtered_distance_right)
         #     # tagDB.update({'distance_right':distance_b,'distance_left':distance_a},where('id')==id)
             if tagDBJS.find_one({'id':id}) == None:
+                print(id)
                 tagDBJS.insert_one({
                     '_id':id,
                     'id':id,
@@ -337,6 +444,15 @@ def getEspWithRoom():
     esp32 = esp32PairDBJS.find_one({"roomID":roomID})
     return esp32
     
+@app.route("/update_room",methods=["GET","POST"])
+def updateRoom():
+    roomID = request.form['id']
+    userID = request.form['userID']
+    newuserID = request.form['newuserID']
+    esp32ID = request.form['esp32ID']
+    roomName = request.form['name']
+    roomDBJS.update_one({'id':roomID,'userID':userID,'esp32ID':esp32ID},{"$set":{'name':roomName,'userID':newuserID}})
+    return ""
 
 @app.route("/insert_room/",methods=["GET","POST"])
 def insertRoom():
@@ -367,13 +483,22 @@ def getRoom():
     # rooms = roomDB.get(where('userID')==request.form['userID'])
     rooms = []
     userID = request.form['userID']
-    roomsJS = roomDBJS.find()
+    roomsJS = roomDBJS.find({'userID':userID})
     for x in roomsJS:
         rooms.append(x)
     # print(request.form['userID'])
     return rooms
     # print("ASdasd")
     # return "asdasd"
+
+@app.route("/get_room_where_esp",methods=["GET","POST"])
+def getRoomWhereESP():
+    esp32ID = request.form['esp32ID']
+    userID = request.form['userID']
+    print(userID)
+    room = roomDBJS.find_one({'esp32ID':esp32ID,'userID':userID})
+    print(room)
+    return room
 
 
 if __name__ == '__main__':

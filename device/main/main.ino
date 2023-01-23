@@ -115,11 +115,11 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
       // if(advertisedDevice.toString().find_first_of("iTAG            ")==5){
           // Serial.println("Advertised Device: %s", advertisedDevice.toString().c_str());
           // Serial.println(advertisedDevice.getName().compare("iTAG            "));
-          //  Serial.println(advertisedDevice.getName().c_str());
-          if(advertisedDevice.getName().compare("iTAG            ")==0||advertisedDevice.getName().compare("ESP32-11")==0){
+          Serial.println(advertisedDevice.getName().c_str());
+          // if(advertisedDevice.getName().compare("iTAG            ")==0||advertisedDevice.getName().compare("ESP32-11")==0){
+          if(true){
             int rssi = advertisedDevice.getRSSI();
-            Serial.println(advertisedDevice.getName().c_str());
-            Serial.println(advertisedDevice.getAddress().toString().c_str());
+           
                      
             if(advertisedDevice.getName().compare("ESP32-11")==0){
               pairDistance = rssi;
