@@ -8,7 +8,7 @@ uri = "mongodb+srv://cluster0.yhuewdl.mongodb.net/?authSource=%24external&authMe
 client = MongoClient(uri,
                      tls=True,
                      tlsCertificateKeyFile='sert.pem')
-
+ 
 
 # Connect to the test db 
 db=client['findable']
@@ -328,8 +328,8 @@ def upsertTag(address,name,distance,espID):
             avg_a = round(total_a/len(filtered_distance_left_particle),2)
             avg_b = round(total_b/len(filtered_distance_right_particle),2)
             
-            distance_a = round(pow(10,((avg_a) - (filtered_distance_left_particle[-1]))/(10*2.5)),2)
-            distance_b = round(pow(10,((avg_b) - (filtered_distance_right_particle[-1]))/(10*2.5)),2)
+            distance_a = round(pow(10,((-77) - (filtered_distance_left_particle[-1]))/(10*2.5)),2)
+            distance_b = round(pow(10,((-77) - (filtered_distance_right_particle[-1]))/(10*2.5)),2)
         #     # print(filtered_distance_left)
         #     # print(filtered_distance_right)
         #     # tagDB.update({'distance_right':distance_b,'distance_left':distance_a},where('id')==id)
