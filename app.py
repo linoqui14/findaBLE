@@ -419,7 +419,7 @@ def updateESPDistance(id,distance):
         for x in espDistances:
             total+=x
         avg = round(total/len(espDistances),2)
-        distance = round(pow(10,((avg) - (filtered_distances[-1]))/(10*2.5)),3)
+        distance = round(pow(10,((avg) - (filtered_distances[-1]))/(10*2.8)),3)
         esp32PairDBJS.update_one({'id':id},{'$set':{'distance':distance}})
 
     else: esp32PairDBJS.update_one({'id':id},{'$set':{'distance':0.0}})
