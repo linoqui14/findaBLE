@@ -2,3 +2,5 @@ matplotlib
 numpy
 pymongo==3.4.0
 Flask==2.2.2
+mod_wsgi
+
