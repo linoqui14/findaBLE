@@ -4,7 +4,7 @@ from flask import Flask,request
 from util import kalman_filter,particle_filter
 from pymongo import MongoClient
 import datetime
-client = MongoClient('mongodb+srv://cluster0.yhuewdl.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority')
+client = MongoClient('mongodb://localhost:27017')
 
 # Connect to the test db 
 db=client['findable']
