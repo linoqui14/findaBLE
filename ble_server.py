@@ -1,13 +1,10 @@
 
-import imp
-import json
 from flask import Flask,request
-from tinydb import TinyDB,where
 # from models import User,Tag,ESP32Pair,tagDB
 from util import kalman_filter,particle_filter
 from pymongo import MongoClient
 import datetime
-client = MongoClient('mongodb://localhost:27017')
+client = MongoClient('mongodb+srv://cluster0.yhuewdl.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority')
 
 # Connect to the test db 
 db=client['findable']
@@ -297,6 +294,7 @@ def upsertTag(address,name,distance,espID):
         for tg in tags:
             if tg['id']==id:
                 this_tag = tg
+                break
         # print(tags.index(this_tag))
         if len(this_tag['distance_left'])>50:
             if position=='left' and distance!='na':
@@ -311,7 +309,7 @@ def upsertTag(address,name,distance,espID):
             if position=='right' and distance!='na':
                 this_tag['distance_right'].append(float(distance))
         print(len(tags))
-        if len(this_tag['distance_left'])>5 and len(this_tag['distance_right'])>10:
+        if len(this_tag['distance_left'])>10 and len(this_tag['distance_right'])>10:
             filtered_distance_left = kalman_filter(this_tag['distance_left'][1:],A=1, H=1, Q=1.6, R=6)
             filtered_distance_right = kalman_filter(this_tag['distance_right'][1:],A=1, H=1, Q=1.6, R=6)
             filtered_distance_left_particle = particle_filter(filtered_distance_left,A=1, H=1, Q=1.6, R=6,quant_particles=100)

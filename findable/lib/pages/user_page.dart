@@ -1023,28 +1023,14 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                   children: [
                                                                     Column(
+                                                                      crossAxisAlignment: CrossAxisAlignment.start,
                                                                       children: [
-                                                                        Text("Room Name",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white,fontSize: 8),),
-                                                                        Text(room.name.toUpperCase(),style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 12),),
+                                                                        Text("Room Name",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.normal,color: Colors.white,fontSize: 8),),
+                                                                        Text(room.name.toUpperCase(),style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 20),),
                                                                       ],
                                                                     ),
                                                                     // Text(esp.id,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white),),
-                                                                    CustomTextButton(
-                                                                      width:110,
-                                                                      onPressed: (){
-                                                                        DBController.get(command: "update_esp32_reset/${esp.id}/1", data: {}).then((value) {
-                                                                          print(value);
-                                                                          stateDistanceFunction(() {
-                                                                            esp.mode = esp.mode==1?0:1;
 
-                                                                          });
-                                                                        });
-
-                                                                      },
-                                                                      color: Colors.blue,
-                                                                      style: TextStyle(fontSize: 8,color: Colors.white),
-                                                                      text: "Change Mode",
-                                                                    ),
                                                                   ],
                                                                 ),
                                                                 Row(
@@ -1052,20 +1038,20 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                   children: [
                                                                     Column(
                                                                       children: [
-                                                                        Text("ESP ID",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white,fontSize: 8),),
-                                                                        Text(esp.id,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 8),),
+                                                                        Text("ESP ID",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.normal,color: Colors.white,fontSize: 8),),
+                                                                        Text(esp.id,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 13),),
                                                                       ],
                                                                     ),
                                                                     Column(
                                                                       children: [
-                                                                        Text("Distance Between ESPs",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white,fontSize: 8),),
-                                                                        Text(esp.sensorDistance.toStringAsPrecision(2)+"m",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 8),),
+                                                                        Text("Distance Between ESPs",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.normal,color: Colors.white,fontSize: 8),),
+                                                                        Text(esp.sensorDistance.toStringAsPrecision(2)+"m",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 13),),
                                                                       ],
                                                                     ),
                                                                     Column(
                                                                       children: [
-                                                                        Text("ESP Current Mode",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white,fontSize: 8),),
-                                                                        Text(esp.mode==1?"Getting ESP Distance":"Finding Tags",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 8),),
+                                                                        Text("ESP Current Mode",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.normal,color: Colors.white,fontSize: 8),),
+                                                                        Text(esp.mode==1?"Getting ESP Distance":"Finding Tags",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 13),),
                                                                       ],
                                                                     ),
                                                                   ],
@@ -1290,7 +1276,20 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                                                                   Positioned(
                                                                                                                     child: Column(
                                                                                                                       children: [
-                                                                                                                        Icon(Icons.place,color: Colors.blue,),
+                                                                                                                        Stack(
+                                                                                                                          alignment: Alignment.center,
+                                                                                                                          children: [
+                                                                                                                            Container(
+                                                                                                                              width: 50,
+                                                                                                                              height: 50,
+                                                                                                                              decoration: new BoxDecoration(
+                                                                                                                                color: Colors.blue.withAlpha(100),
+                                                                                                                                shape: BoxShape.circle,
+                                                                                                                              ),
+                                                                                                                            ),
+                                                                                                                            Icon(Icons.place,color: Colors.blue,size: 15,),
+                                                                                                                          ],
+                                                                                                                        ),
                                                                                                                         Text("${e.name}",style: TextStyle(fontSize: 10),),
                                                                                                                         Text("(${(x).toStringAsFixed(2)},${(y).toStringAsFixed(2)})",style: TextStyle(fontSize: 5),),
                                                                                                                       ],
@@ -1369,7 +1368,6 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                                         Tools.basicDialog(context: context,
                                                                                             onPop: () async => false,
                                                                                             statefulBuilder: StatefulBuilder(
-
                                                                                                 builder: (context,state){
                                                                                                   return AlertDialog(
                                                                                                     title: Text("Deleted"),
@@ -1522,157 +1520,179 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                   );
                                                 }
                                             ),
-                                            Padding(
-                                              padding: const EdgeInsets.only(left: 15),
-                                              child: CustomTextButton(
-                                                rAll: 25,
-                                                text: "Edit",
-                                                color: Colors.blue,
-                                                onPressed: (){
-                                                  TextEditingController roomName = TextEditingController(text: room.name);
-                                                  Tools.basicDialog(
-                                                      onPop: () async => true,
-                                                      context: context,
-                                                      statefulBuilder: StatefulBuilder(
-                                                        builder: (contex,setState1){
-                                                          return Dialog(
-                                                            elevation: 0,
-                                                            alignment: Alignment.center,
-                                                            backgroundColor: Colors.transparent,
-                                                            child: Column(
-                                                              mainAxisAlignment: MainAxisAlignment.center,
-                                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                                              children: [
-                                                                Padding(
-                                                                  padding: const EdgeInsets.only(left: 20.0),
-                                                                  child: Text('Room',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 18),),
-                                                                ),
-                                                                Container(
-                                                                  padding: EdgeInsets.all(20),
-                                                                  width: double.infinity,
-                                                                  height: 180,
-                                                                  decoration: BoxDecoration(
-                                                                      color: Colors.white,
-                                                                      borderRadius: BorderRadius.only(topLeft:Radius.circular(20),topRight: Radius.circular(20),bottomRight: Radius.circular(0))
-                                                                  ),
-                                                                  child: Column(
-                                                                    children: [
-                                                                      CustomTextField(
-                                                                        hint: "Name",
-                                                                        controller: roomName,
-                                                                        color: Colors.blue,
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                ),
-                                                                Row(
-                                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Padding(
+                                                  padding: const EdgeInsets.only(left: 15),
+                                                  child: CustomTextButton(
+                                                    rAll: 10,
+                                                    text: "Edit",
+                                                    color: Colors.blue,
+                                                    style:TextStyle(fontSize: 8,color: Colors.white),
+                                                    onPressed: (){
+                                                      TextEditingController roomName = TextEditingController(text: room.name);
+                                                      Tools.basicDialog(
+                                                          onPop: () async => true,
+                                                          context: context,
+                                                          statefulBuilder: StatefulBuilder(
+                                                            builder: (contex,setState1){
+                                                              return Dialog(
+                                                                elevation: 0,
+                                                                alignment: Alignment.center,
+                                                                backgroundColor: Colors.transparent,
+                                                                child: Column(
+                                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                                  crossAxisAlignment: CrossAxisAlignment.start,
                                                                   children: [
-                                                                    CustomTextButton(
-                                                                      rTopRight: 20,
-                                                                      rBottomRight: 20,
-                                                                      rTopLeft: 0,
-                                                                      rBottomLeft: 20,
-                                                                      color: Colors.blue,
-                                                                      text: "Save",
-                                                                      onPressed: (){
-                                                                        if(roomName.text.isNotEmpty){
-                                                                          DBController.get(command: "update_room", data: {'name':roomName.text,'id':room.id,'userID':widget.user.id.toString(),'newuserID':widget.user.id.toString(),'esp32ID':room.esp32ID}).then((value){
-                                                                            Navigator.of(context).pop();
-                                                                            setState((){});
-                                                                          });
-                                                                          // DBController.get(command: "get_esp32/${ESP32ID.text}", data: {}).then((esp32) {
-                                                                          //
-                                                                          //   if(esp32![0]=='{'){
-                                                                          //     ESP esp = ESP.toObject(jsonDecode(esp32));
-                                                                          //     // Room room = Room(name: roomName.text, userID: widget.user.id.toString(),esp32ID: esp.id);
-                                                                          //     // DBController.get(command: 'insert_room/', data: room.toJson(isNew: true)).then((room){
-                                                                          //     //   print(room);
-                                                                          //     //   // ESP esp = ESP.toObject(jsonDecode(esp32));
-                                                                          //     //   // DBController.post(command: "update_esp32_room", data: {'id':esp.id,'roomID':room}).then((value) {
-                                                                          //     //   //   setState(() {
-                                                                          //     //   //
-                                                                          //     //   //     // Room room = Room(id: (rooms.length+1).toString(), name: roomName.text, userID: widget.user.id.toString());
-                                                                          //     //   //     // rooms.add(room);
-                                                                          //     //   //     // esp.roomID = room.id;
-                                                                          //     //   //     // if(esps.where((element) => element.id==esp.id).isEmpty)esps.add(esp);
-                                                                          //     //   //   });
-                                                                          //     //   //   Navigator.of(context).pop();
-                                                                          //     //   // });
-                                                                          //     //   setState((){
-                                                                          //     //
-                                                                          //     //   });
-                                                                          //     //   Navigator.of(context).pop();
-                                                                          //     //
-                                                                          //     // });
-                                                                          //
-                                                                          //
-                                                                          //   }
-                                                                          //
-                                                                          // });
-
-                                                                        }
-
-                                                                      },
+                                                                    Padding(
+                                                                      padding: const EdgeInsets.only(left: 20.0),
+                                                                      child: Text('Room',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 18),),
                                                                     ),
-                                                                    CustomTextButton(
-                                                                      rTopRight: 0,
-                                                                      rBottomRight: 20,
-                                                                      rTopLeft: 20,
-                                                                      rBottomLeft: 20,
-                                                                      color: Colors.red,
-                                                                      text: "Delete",
-                                                                      onPressed: (){
-                                                                        if(roomName.text.isNotEmpty){
-                                                                          DBController.get(command: "update_room", data: {'name':roomName.text,'userID':widget.user.id.toString(),'id':room.id,'esp32ID':room.esp32ID,'newuserID':"-1"}).then((value){
-                                                                            Navigator.of(context).pop();
-                                                                            setState((){});
-                                                                          });
-                                                                          // DBController.get(command: "get_esp32/${ESP32ID.text}", data: {}).then((esp32) {
-                                                                          //
-                                                                          //   if(esp32![0]=='{'){
-                                                                          //     ESP esp = ESP.toObject(jsonDecode(esp32));
-                                                                          //     // Room room = Room(name: roomName.text, userID: widget.user.id.toString(),esp32ID: esp.id);
-                                                                          //     // DBController.get(command: 'insert_room/', data: room.toJson(isNew: true)).then((room){
-                                                                          //     //   print(room);
-                                                                          //     //   // ESP esp = ESP.toObject(jsonDecode(esp32));
-                                                                          //     //   // DBController.post(command: "update_esp32_room", data: {'id':esp.id,'roomID':room}).then((value) {
-                                                                          //     //   //   setState(() {
-                                                                          //     //   //
-                                                                          //     //   //     // Room room = Room(id: (rooms.length+1).toString(), name: roomName.text, userID: widget.user.id.toString());
-                                                                          //     //   //     // rooms.add(room);
-                                                                          //     //   //     // esp.roomID = room.id;
-                                                                          //     //   //     // if(esps.where((element) => element.id==esp.id).isEmpty)esps.add(esp);
-                                                                          //     //   //   });
-                                                                          //     //   //   Navigator.of(context).pop();
-                                                                          //     //   // });
-                                                                          //     //   setState((){
-                                                                          //     //
-                                                                          //     //   });
-                                                                          //     //   Navigator.of(context).pop();
-                                                                          //     //
-                                                                          //     // });
-                                                                          //
-                                                                          //
-                                                                          //   }
-                                                                          //
-                                                                          // });
-
-                                                                        }
-
-                                                                      },
+                                                                    Container(
+                                                                      padding: EdgeInsets.all(20),
+                                                                      width: double.infinity,
+                                                                      height: 180,
+                                                                      decoration: BoxDecoration(
+                                                                          color: Colors.white,
+                                                                          borderRadius: BorderRadius.only(topLeft:Radius.circular(20),topRight: Radius.circular(20),bottomRight: Radius.circular(0))
+                                                                      ),
+                                                                      child: Column(
+                                                                        children: [
+                                                                          CustomTextField(
+                                                                            hint: "Name",
+                                                                            controller: roomName,
+                                                                            color: Colors.blue,
+                                                                          ),
+                                                                        ],
+                                                                      ),
                                                                     ),
+                                                                    Row(
+                                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                      children: [
+                                                                        CustomTextButton(
+                                                                          rTopRight: 20,
+                                                                          rBottomRight: 20,
+                                                                          rTopLeft: 0,
+                                                                          rBottomLeft: 20,
+                                                                          color: Colors.blue,
+                                                                          text: "Save",
+                                                                          onPressed: (){
+                                                                            if(roomName.text.isNotEmpty){
+                                                                              DBController.get(command: "update_room", data: {'name':roomName.text,'id':room.id,'userID':widget.user.id.toString(),'newuserID':widget.user.id.toString(),'esp32ID':room.esp32ID}).then((value){
+                                                                                Navigator.of(context).pop();
+                                                                                setState((){});
+                                                                              });
+                                                                              // DBController.get(command: "get_esp32/${ESP32ID.text}", data: {}).then((esp32) {
+                                                                              //
+                                                                              //   if(esp32![0]=='{'){
+                                                                              //     ESP esp = ESP.toObject(jsonDecode(esp32));
+                                                                              //     // Room room = Room(name: roomName.text, userID: widget.user.id.toString(),esp32ID: esp.id);
+                                                                              //     // DBController.get(command: 'insert_room/', data: room.toJson(isNew: true)).then((room){
+                                                                              //     //   print(room);
+                                                                              //     //   // ESP esp = ESP.toObject(jsonDecode(esp32));
+                                                                              //     //   // DBController.post(command: "update_esp32_room", data: {'id':esp.id,'roomID':room}).then((value) {
+                                                                              //     //   //   setState(() {
+                                                                              //     //   //
+                                                                              //     //   //     // Room room = Room(id: (rooms.length+1).toString(), name: roomName.text, userID: widget.user.id.toString());
+                                                                              //     //   //     // rooms.add(room);
+                                                                              //     //   //     // esp.roomID = room.id;
+                                                                              //     //   //     // if(esps.where((element) => element.id==esp.id).isEmpty)esps.add(esp);
+                                                                              //     //   //   });
+                                                                              //     //   //   Navigator.of(context).pop();
+                                                                              //     //   // });
+                                                                              //     //   setState((){
+                                                                              //     //
+                                                                              //     //   });
+                                                                              //     //   Navigator.of(context).pop();
+                                                                              //     //
+                                                                              //     // });
+                                                                              //
+                                                                              //
+                                                                              //   }
+                                                                              //
+                                                                              // });
+
+                                                                            }
+
+                                                                          },
+                                                                        ),
+                                                                        CustomTextButton(
+                                                                          rTopRight: 0,
+                                                                          rBottomRight: 20,
+                                                                          rTopLeft: 20,
+                                                                          rBottomLeft: 20,
+                                                                          color: Colors.red,
+                                                                          text: "Delete",
+                                                                          onPressed: (){
+                                                                            if(roomName.text.isNotEmpty){
+                                                                              DBController.get(command: "update_room", data: {'name':roomName.text,'userID':widget.user.id.toString(),'id':room.id,'esp32ID':room.esp32ID,'newuserID':"-1"}).then((value){
+                                                                                Navigator.of(context).pop();
+                                                                                setState((){});
+                                                                              });
+                                                                              // DBController.get(command: "get_esp32/${ESP32ID.text}", data: {}).then((esp32) {
+                                                                              //
+                                                                              //   if(esp32![0]=='{'){
+                                                                              //     ESP esp = ESP.toObject(jsonDecode(esp32));
+                                                                              //     // Room room = Room(name: roomName.text, userID: widget.user.id.toString(),esp32ID: esp.id);
+                                                                              //     // DBController.get(command: 'insert_room/', data: room.toJson(isNew: true)).then((room){
+                                                                              //     //   print(room);
+                                                                              //     //   // ESP esp = ESP.toObject(jsonDecode(esp32));
+                                                                              //     //   // DBController.post(command: "update_esp32_room", data: {'id':esp.id,'roomID':room}).then((value) {
+                                                                              //     //   //   setState(() {
+                                                                              //     //   //
+                                                                              //     //   //     // Room room = Room(id: (rooms.length+1).toString(), name: roomName.text, userID: widget.user.id.toString());
+                                                                              //     //   //     // rooms.add(room);
+                                                                              //     //   //     // esp.roomID = room.id;
+                                                                              //     //   //     // if(esps.where((element) => element.id==esp.id).isEmpty)esps.add(esp);
+                                                                              //     //   //   });
+                                                                              //     //   //   Navigator.of(context).pop();
+                                                                              //     //   // });
+                                                                              //     //   setState((){
+                                                                              //     //
+                                                                              //     //   });
+                                                                              //     //   Navigator.of(context).pop();
+                                                                              //     //
+                                                                              //     // });
+                                                                              //
+                                                                              //
+                                                                              //   }
+                                                                              //
+                                                                              // });
+
+                                                                            }
+
+                                                                          },
+                                                                        ),
+                                                                      ],
+                                                                    ),
+
                                                                   ],
                                                                 ),
+                                                              );
+                                                            },
+                                                          )
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                                CustomTextButton(
+                                                  width:110,
+                                                  onPressed: (){
+                                                    // DBController.get(command: "update_esp32_reset/${esp.id}/1", data: {}).then((value) {
+                                                    //   print(value);
+                                                    //   stateDistanceFunction(() {
+                                                    //     esp.mode = esp.mode==1?0:1;
+                                                    //
+                                                    //   });
+                                                    // });
 
-                                                              ],
-                                                            ),
-                                                          );
-                                                        },
-                                                      )
-                                                  );
-                                                },
-                                              ),
+                                                  },
+                                                  color: Colors.blue,
+                                                  style: TextStyle(fontSize: 8,color: Colors.white),
+                                                  text: "Setup Sensors",
+                                                ),
+                                              ],
                                             )
                                           ],
                                         );
