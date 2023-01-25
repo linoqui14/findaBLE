@@ -17,7 +17,7 @@
 const char* ssid = "waypaynimama221x-far";
 const char* password = "_Waypaynimama22221xyzq";
 
-String serverName = "http://192.168.1.6:5000/";
+String serverName = "https://findable.onrender.com/";
 TaskHandle_t requestTask;
 int scanTime = 5; //In seconds
 BLEScan* pBLEScan;

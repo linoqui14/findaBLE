@@ -20,28 +20,30 @@ class Constants{
 }
 
 class DBController{
-  static String ip = "192.168.1.6";
+  // static String ip = "192.168.1.6";
+  static String ip = "https://findable.onrender.com";
   static String code = "123556";
   static Future<bool> testConnection() async{
-    String phpurl = "http://$ip:5000/is_connected";
+    String phpurl = "$ip/is_connected";
     var res = await http.post(Uri.parse(phpurl), body: {
     }); //sending post request with header data
     return int.parse(res.body)==1?true:false;
   }
   static Future<String?> get({required String command,required Map<String,dynamic> data}) async{
-    var res = await http.post(Uri.http('$ip:5000','/$command'),body: data);
+    String phpurl = "$ip/$command";
+    var res = await http.post(Uri.parse(phpurl),body: data);
     return res.body;
   }
 
   static Future<String?> post({required String command,required Map<String,dynamic> data}) async{
-    String phpurl = "http://$ip:5000/$command";
+    String phpurl = "$ip/$command";
     var res = await http.post(Uri.parse(phpurl),body: data);
     // print(res.body);
     return res.body;
 
   }
   static Future<User?> getUser({required String username,required String password,required String deviceID}) async{
-    String phpurl = "http://$ip:5000/get_user/$code";
+    String phpurl = "$ip/get_user/$code";
     var res = await http.post(Uri.parse(phpurl),body: {'username':username,'password':password,'deviceID':deviceID});
     print(res.body);
     try {
@@ -53,7 +55,7 @@ class DBController{
     }
   }
   static Future<User?> getCurrentLogin({required deviceID}) async{
-    String phpurl = "http://$ip:5000/get_current_login/$code";
+    String phpurl = "$ip/get_current_login/$code";
     var res = await http.post(Uri.parse(phpurl),body: {'deviceID':deviceID,});
 
     try {
@@ -66,7 +68,7 @@ class DBController{
   }
 
   static Future<User?> upsertUser({required User user}) async{
-    String phpurl = "http://$ip:5000/insert_user/$code";
+    String phpurl = "$ip/insert_user/$code";
     var res = await http.post(Uri.parse(phpurl),body: user.toJson());
     try {
       User user = User.toObject(json.decode(res.body));
