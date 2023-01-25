@@ -1679,13 +1679,21 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                 CustomTextButton(
                                                   width:110,
                                                   onPressed: (){
-                                                    // DBController.get(command: "update_esp32_reset/${esp.id}/1", data: {}).then((value) {
-                                                    //   print(value);
-                                                    //   stateDistanceFunction(() {
-                                                    //     esp.mode = esp.mode==1?0:1;
-                                                    //
-                                                    //   });
-                                                    // });
+                                                    DBController.get(command: "reset_esp_distance", data: {}).then((n) {
+                                                      print(n);
+                                                      DBController.get(command: "update_esp32_reset/${esp.id}/1", data: {}).then((value) {
+
+                                                        stateDistanceFunction(() {
+                                                          esp.mode = esp.mode==1?0:1;
+                                                          // setState(() {
+                                                          //
+                                                          // });
+                                                        });
+
+                                                      });
+
+                                                    });
+
 
                                                   },
                                                   color: Colors.blue,
