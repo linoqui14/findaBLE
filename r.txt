@@ -2,3 +2,4 @@ matplotlib
 numpy
 pymongo==3.10.1
 Flask==2.2.2
+gunicorn==20.1.0
