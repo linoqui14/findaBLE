@@ -1,5 +1,4 @@
-matplotlib @ file:///C:/ci/matplotlib-suite_1660169687702/work
-matplotlib-inline @ file:///C:/ci/matplotlib-inline_1661915841596/work
+matplotlib
 numpy==1.23.4
 pymongo==3.4.0
 Flask==2.2.2
