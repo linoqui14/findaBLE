@@ -9,6 +9,7 @@ client = MongoClient(uri,
                      tls=True,
                      tlsCertificateKeyFile='sert.pem')
 
+
 # Connect to the test db 
 db=client['findable']
 
