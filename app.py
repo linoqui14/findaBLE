@@ -240,7 +240,7 @@ def getUsers():
 
 @app.route("/is_connected")
 def isConnected():
-    return 1
+    return "1"
     
 @app.route("/get_tag",methods=["GET","POST"])
 def getTag():
