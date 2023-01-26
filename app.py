@@ -398,9 +398,13 @@ def deleteESP32(id):
     # esp32PairDB.remove(where("id")==id)
     return "1"
 
-@app.route("/update_esp32_mode/<id>/<mode>",methods=["GET","POST"])
-def updateESP32Mode(id,mode):
-    esp32PairDBJS.update_one({'id':id},{"$set":{'mode':int(mode),'reset':0}})
+@app.route("/update_esp32_mode/<id>/",methods=["GET","POST"])
+def updateESP32Mode(id):
+    esp = esp32PairDBJS.find_one({'id':id})
+    mode = int(esp['mode'])
+    if mode == 1:
+        mode = 0
+    esp32PairDBJS.update_one({'id':id},{"$set":{'mode':mode,'reset':1}})
     return "1"
 @app.route("/reset_esp_distance")
 def resetESPdistance():
@@ -408,6 +412,8 @@ def resetESPdistance():
     return '1'
 @app.route("/update_esp32_distance/<id>/<distance>",methods=["GET","POST"])
 def updateESPDistance(id,distance):
+    esp32PairDBJS.update_one({'id':id},{"$set":{'reset':0}})
+    
     if len(espDistances)<100:
         espDistances.append(float(distance))
     else :espDistances[-1] = float(distance)

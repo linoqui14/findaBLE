@@ -57,17 +57,18 @@ void RequestTask( void * parameter) {
             JSONVar value = myObject["mode"];   
             String strValue =   JSON.stringify(value);
             mode = int(strValue[0]);
-          
+            Serial.println(String(mode)+"asdasdsdasdasdasdasdasd");
             if(mode==49){
               mode = 0;
             }
             else{
               mode = 1;
             }
-            HTTPClient http;
-            String serverPath = serverName+"/update_esp32_mode/"+pairID+"/"+mode;
-            http.begin(serverPath.c_str()); 
-            int httpResponseCode = http.GET();
+            // HTTPClient http;
+            // String serverPath = serverName+"update_esp32_mode/"+pairID+"/"+mode;
+            // http.begin(serverPath.c_str()); 
+            // int httpResponseCode = http.GET();
+            // Serial.println(String(httpResponseCode)+"asdasdsdasdasdasdasdasd");            
             delay(2000);           
             ESP.restart();      
           }
