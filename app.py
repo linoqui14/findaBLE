@@ -387,9 +387,13 @@ def updateTagUserID():
 def insertESP32(id):
     esp32 = esp32PairDBJS.insert({'_id':id,'id':id,'distance':0,'reset':0,'mode':0})
     return "1"
-    
+
+def resetESPdistance():
+    espDistances.clear()
+    return '1'
 @app.route("/update_esp32_reset/<id>",methods=["GET","POST"])
 def updateESP32Reset(id):
+    resetESPdistance()
     esp32PairDBJS.update_one({'id':id},{"$set":{'reset':1}})
     return "1"
 
@@ -402,10 +406,8 @@ def deleteESP32(id):
 def updateESP32Mode(id,mode):
     esp32PairDBJS.update_one({'id':id},{"$set":{'mode':int(mode),'reset':0}})
     return "1"
-@app.route("/reset_esp_distance/",methods=["GET","POST"])
-def resetESPdistance():
-    espDistances.clear()
-    return '1'
+
+
 @app.route("/update_esp32_distance/<id>/<distance>",methods=["GET","POST"])
 def updateESPDistance(id,distance):
     if len(espDistances)<100:
