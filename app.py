@@ -402,7 +402,7 @@ def deleteESP32(id):
     # esp32PairDB.remove(where("id")==id)
     return "1"
 
-@app.route("/update_esp32_mode/<id>/<mode>")
+@app.route("/update_esp32_mode/<id>/<mode>",methods=["GET","POST"])
 def updateESP32Mode(id,mode):
     esp32PairDBJS.update_one({'id':id},{"$set":{'mode':int(mode),'reset':0}})
     return "1"
