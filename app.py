@@ -404,6 +404,7 @@ def updateESP32Mode(id):
     mode = int(esp['mode'])
     if mode == 1:
         mode = 0
+    else:mode = 1
     esp32PairDBJS.update_one({'id':id},{"$set":{'mode':mode,'reset':1}})
     return "1"
 @app.route("/reset_esp_distance")
