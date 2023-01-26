@@ -1029,6 +1029,12 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                         Text(room.name.toUpperCase(),style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 20),),
                                                                       ],
                                                                     ),
+                                                                    Column(
+                                                                      children: [
+                                                                        Text("ESP Current Mode",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.normal,color: Colors.white,fontSize: 8),),
+                                                                        Text(esp.mode==1?"Getting ESP Distance":"Finding Tags",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 13),),
+                                                                      ],
+                                                                    ),
                                                                     // Text(esp.id,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.w100,color: Colors.white),),
 
                                                                   ],
@@ -1048,12 +1054,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                         Text(esp.sensorDistance.toStringAsPrecision(2)+"m",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 13),),
                                                                       ],
                                                                     ),
-                                                                    Column(
-                                                                      children: [
-                                                                        Text("ESP Current Mode",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.normal,color: Colors.white,fontSize: 8),),
-                                                                        Text(esp.mode==1?"Getting ESP Distance":"Finding Tags",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 13),),
-                                                                      ],
-                                                                    ),
+
                                                                   ],
                                                                 )
                                                               ],
@@ -1681,8 +1682,8 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                   onPressed: (){
                                                     DBController.get(command: "reset_esp_distance", data: {}).then((n) {
                                                       print(n);
-                                                      DBController.get(command: "update_esp32_mode/${esp.id}", data: {}).then((value) {
-                                                        
+                                                      DBController.get(command: "update_esp32_mode/${esp.id}/", data: {}).then((value) {
+
                                                         stateDistanceFunction(() {
                                                           esp.mode = esp.mode==1?0:1;
                                                           // setState(() {
