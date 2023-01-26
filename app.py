@@ -156,8 +156,8 @@ def addLog():
     userID = request.form['userID']
     roomID = request.form['roomID']
     status = request.form['status']
-    left = request.form['left']
-    right = request.form['right']
+    left = float(request.form['left'])
+    right = float(request.form['right'])
     current_time = datetime.datetime.now()
     size = logDB.find()
     count = 0

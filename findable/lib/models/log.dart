@@ -13,8 +13,8 @@ class Log {
       'roomID':roomID,
       'userID':userID,
       'status':status,
-      'left':status,
-      'right':status,
+      'left':left.toString(),
+      'right':right.toString(),
     };
   }
 
