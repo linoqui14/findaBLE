@@ -413,7 +413,10 @@ def resetESPdistance():
     return '1'
 @app.route("/update_esp32_distance/<id>/<distance>",methods=["GET","POST"])
 def updateESPDistance(id,distance):
-    esp32PairDBJS.update_one({'id':id},{"$set":{'reset':0}})
+    esp = esp32PairDBJS.find_one({'id':id})
+    reset = int(esp['reset'])
+    if reset == 1:
+        esp32PairDBJS.update_one({'id':id},{"$set":{'reset':0}})
     
     if len(espDistances)<100:
         espDistances.append(float(distance))
