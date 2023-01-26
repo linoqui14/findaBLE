@@ -68,7 +68,7 @@ void RequestTask( void * parameter) {
             String serverPath = serverName+"update_esp32_mode/"+pairID+"/"+mode;
             http.begin(serverPath.c_str()); 
             int httpResponseCode = http.GET();
-            Serial.println(String(httpResponseCode)+"asdasdsdasdasdasdasdasd");            
+            Serial.println(String(httpResponseCode)+);            
             delay(2000);           
             ESP.restart();      
           }
