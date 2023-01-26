@@ -45,7 +45,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
   List<Map<String,dynamic>> tagsDevice = [];
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   List<BluetoothDevice> devicesList = [];
-
+  List<Tag> offLineTags = [];
 
   void initState() {
     super.initState();
@@ -298,7 +298,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                             onPressed: (){
                                               DBController.get(command: 'get_room_where_esp', data: {'esp32ID':tag.espID,'userID':widget.user.id.toString()}).then((value) {
                                                 var json = jsonDecode(value!);
-                                                Log log = Log(date: "",roomID:json['id'] ,userID: widget.user.id.toString(),status: "Tag ${tag.name} is found!");
+                                                Log log = Log(left: tag.left,right: tag.right, date: "",roomID:json['id'] ,userID: widget.user.id.toString(),status: "Tag ${tag.name} is found!");
                                                 DBController.get(command: "add_log", data: log.tojson()).then((value) {
                                                   setState((){
                                                     Navigator.of(context).pop();
@@ -517,9 +517,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
             // print(result);
 
             if(result.device.type==BluetoothDeviceType.le){
-              if(devicesList.where((element) => element.id.id.toLowerCase()==result.device.id.id.toLowerCase()).isEmpty){
-                devicesList.add(result.device);
-              }
+
 
               if(currentSelectedTag!=null){
                 double distance =  pow(10,(((-77) - (result.rssi))/(10*2.5))).toDouble();
@@ -542,22 +540,26 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
 
               if(tagsDevice.where((tDevice) => tDevice['id']==result.device.id.id ).isEmpty){
                 // print('TAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG');
-                tagsDevice.add({
-                  'id':result.device.id.id,
-                  'count':0,
-                  'name':result.device.name,
-                  'isNotified':false
-                });
+
                 DBController.get(command: 'get_tag_where_id_userid', data: {'id':result.device.id.id.toLowerCase(),'userID':widget.user.id.toString()}).then((value) {
-                  print(value!);
+
                   var json = jsonDecode(value!);
 
                   Tag tag = Tag.toObject(json);
                   DBController.get(command: 'get_room_where_esp', data: {'userID':widget.user.id.toString(),'esp32ID':tag.espID}).then((roomData) {
                     // print(roomData);
                     Room room = Room.toObject(jsonDecode(roomData!));
-                    Log log = Log(roomID: room.id,userID: widget.user.id.toString(), date: '',status: "Tag named ${json['name']} is detected at room ${room.name}");
+                    Log log = Log(right: 0.0,left: 0.0,roomID: room.id,userID: widget.user.id.toString(), date: '',status: "Tag named ${json['name']} is detected at room ${room.name}");
                     DBController.get(command: 'add_log', data: log.tojson());
+                    if(offLineTags.where((element) => element.id.toLowerCase()==tag.id.toLowerCase()).isEmpty){
+                      offLineTags.add(tag);
+                    }
+                    tagsDevice.add({
+                      'id':result.device.id.id,
+                      'count':0,
+                      'name':result.device.name,
+                      'isNotified':false
+                    });
                     if(isNotificationOn){
                       flutterLocalNotificationsPlugin.show(1, 'Findable',
                           'Tag named ${json['name']}  is detected!',
@@ -576,7 +578,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
           }
 
           for(var tdvice in tagsDevice){
-
+            print(tdvice['id']);
             print(tdvice['count']);
             if(tdvice['count']>=20&&!tdvice['isNotified']){
               tdvice['isNotified'] = true;
@@ -584,30 +586,24 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                 var json = jsonDecode(value!);
                 Tag tag = Tag.toObject(json);
                 DBController.get(command: 'get_room_where_esp', data: {'userID':widget.user.id.toString(),'esp32ID':tag.espID}).then((roomData) {
-                  print(roomData);
                   Room room = Room.toObject(jsonDecode(roomData!));
-                  Log log = Log(roomID: room.id,userID: widget.user.id.toString(), date: '',status: "Tag named ${json['name']} is too faraway. Last room ${room.name}");
+                  Log log = Log(left:tag.left,right: tag.right ,roomID: room.id,userID: widget.user.id.toString(), date: '',status: "Tag named ${json['name']} is too far away. Last room ${room.name}");
                   DBController.get(command: 'add_log', data: log.tojson());
-                  if(isNotificationOn){
-                    flutterLocalNotificationsPlugin.show(2, 'Findable',
-                        'This tag named ${json['name']} is not detected',
-                        platformChannelSpecifics, payload: '${tdvice['id']}'
-                    );
-                  }
-
                   tagsDevice.remove(tdvice);
                 });
-
-
-
-
-
               });
-
+              Tag tag = offLineTags.where((t) => t.id.toLowerCase()==tdvice['id'].toString().toLowerCase()).first;
+              if(isNotificationOn){
+                flutterLocalNotificationsPlugin.show(2, 'Findable',
+                    'This tag named ${tag.name} is not detected',
+                    platformChannelSpecifics, payload: '${tdvice['id']}'
+                );
+              }
+              offLineTags.remove(tag);
               print("This Tag is not found ${tdvice['name']}");
             }
 
-            if(element.where((scannedD) =>scannedD.device.id.id==tdvice['id'] ).isEmpty){
+            if(element.where((scannedD) =>scannedD.device.id.id.toLowerCase()==tdvice['id'].toLowerCase() ).isEmpty){
               tagsDevice[tagsDevice.indexOf(tdvice)]['count']++;
               // print(tdvice['name']);
               break;
@@ -626,7 +622,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
           // print("${tagsDevice.length }---- ${tagCount}");
 
 
-          // element.clear();
+          element.clear();
 
         });
       });
@@ -1051,6 +1047,9 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                     Column(
                                                                       children: [
                                                                         Text("Distance Between ESPs",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.normal,color: Colors.white,fontSize: 8),),
+                                                                        if(esp.sensorDistance<=0)
+                                                                          CircularProgressIndicator(color: Colors.indigo,),
+                                                                        if(esp.sensorDistance>0)
                                                                         Text(esp.sensorDistance.toStringAsPrecision(2)+"m",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 13),),
                                                                       ],
                                                                     ),
@@ -1070,28 +1069,30 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                               builder: (context, snapshot) {
                                                                 if(!snapshot.hasData)return Center();
                                                                 if(snapshot.connectionState==ConnectionState.waiting)return Center(child: CircularProgressIndicator(),);
-                                                                print(snapshot.data!);
+                                                                // print(snapshot.data!);
                                                                 var jsons = jsonDecode(snapshot.data!);
                                                                 List<Tag> tags =[];
                                                                 for(var json in jsons){
                                                                   Tag tag = Tag.toObject((json));
-
-                                                                  if(tag.espID==esp.id&&tags.where((element) => element.id==tag.id).isEmpty){
-                                                                    tags.add(tag);
-                                                                  }
+                                                                  tags.add(tag);
+                                                                  // print(tagsDevice);
+                                                                  // if(){
+                                                                  //   tags.add(tag);
+                                                                  // }
 
                                                                 }
 
 
                                                                 return ListView(
                                                                   children: tags.map((e){
+                                                                    bool inRange = e.espID==esp.id&&tagsDevice.where((element) => element['id'].toString().toLowerCase()==e.id.toLowerCase()).isNotEmpty;
                                                                     return Padding(
                                                                       padding: const EdgeInsets.symmetric(horizontal: 27),
                                                                       child: Container(
                                                                           padding: EdgeInsets.all(10),
                                                                           margin: EdgeInsets.only(bottom: 10),
                                                                           decoration: BoxDecoration(
-                                                                              color: Colors.indigo,
+                                                                              color: inRange?Colors.indigo:Colors.redAccent,
                                                                               borderRadius: BorderRadius.all(Radius.circular(20))
                                                                           ),
                                                                           child: Row(
@@ -1338,7 +1339,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                                                         color: Colors.indigo,
                                                                                                         text: "Found Tag",
                                                                                                         onPressed: (){
-                                                                                                          Log log = Log(date: "",roomID: room.id,userID: widget.user.id.toString(),status: "Tag ${e.name} is found!");
+                                                                                                          Log log = Log(left: e.left,right: e.right,date: "",roomID: room.id,userID: widget.user.id.toString(),status: "Tag ${e.name} is found!");
                                                                                                           DBController.get(command: "add_log", data: log.tojson()).then((value) {
                                                                                                             setState((){
                                                                                                               Navigator.of(context).pop();
@@ -1356,7 +1357,15 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
 
                                                                                     );
                                                                                   },
-                                                                                  child: Text(e.name,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 10),),
+                                                                                  child: Row(
+                                                                                    children: [
+                                                                                      if(!inRange)
+                                                                                        Icon(Icons.warning,color:Colors.amber,size: 15,),
+                                                                                      if(!inRange)
+                                                                                        Padding(padding: EdgeInsets.only(right: 10)),
+                                                                                      Text(e.name,style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 10),),
+                                                                                    ],
+                                                                                  ),
                                                                                 ),
                                                                               ),
                                                                               Container(
@@ -1682,16 +1691,51 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                   onPressed: (){
 
 
-                                                      DBController.get(command: "update_esp32_mode/${esp.id}/${(esp.mode==1?0:1).toString()}", data: {}).then((value) {
-                                                        print(value);
-                                                        stateDistanceFunction(() {
-                                                          esp.mode = esp.mode==1?0:1;
-                                                          // setState(() {
-                                                          //
-                                                          // });
-                                                        });
+                                                    DBController.get(command: "update_esp32_mode/${esp.id}/${(esp.mode==1?0:1).toString()}", data: {}).then((value) {
+                                                      print(value);
 
-                                                      });
+                                                      Tools.basicDialog(context: context,
+                                                        statefulBuilder: StatefulBuilder(
+                                                            builder: (context,dialogState){
+                                                              return Dialog(
+                                                                backgroundColor: Colors.transparent,
+                                                                child: Container(
+
+                                                                  decoration: BoxDecoration(
+                                                                      color: Colors.white,
+                                                                      borderRadius: BorderRadius.all(Radius.circular(20))
+                                                                  ),
+                                                                  height: 100,
+                                                                  child: Center(
+                                                                    child: Column(
+                                                                      children: [
+                                                                        Text("Please Restart Sensors",style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold),),
+                                                                        Padding(padding: EdgeInsets.only(top: 10)),
+                                                                        CustomTextButton(
+                                                                          onPressed: (){
+                                                                            stateDistanceFunction(() {
+                                                                              esp.mode = esp.mode==1?0:1;
+                                                                              // setState(() {
+                                                                              //
+                                                                              // });
+                                                                            });
+                                                                            Navigator.of(context).pop();
+                                                                          },
+                                                                          color: Colors.blue,
+                                                                          style: TextStyle(fontSize: 8,color: Colors.white),
+                                                                          text: "Confirm",
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            }
+                                                        ),
+                                                        onPop: ()async=>false,
+                                                      );
+
+                                                    });
 
 
 

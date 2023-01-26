@@ -17,7 +17,7 @@ dbUserJS=db['users']
 roomDBJS=db['rooms']
 tagDBJS=db['tags']
 esp32PairDBJS=db['esps']
-logDB=db['logDB']
+logDB=db['logs']
 
 # dbUserJS = TinyDB('user.json')
 # roomDBJS = TinyDB('room.json')
@@ -328,8 +328,8 @@ def upsertTag(address,name,distance,espID):
             avg_a = round(total_a/len(filtered_distance_left_particle),2)
             avg_b = round(total_b/len(filtered_distance_right_particle),2)
             
-            distance_a = round(pow(10,((-77) - (filtered_distance_left_particle[-1]))/(10*2.5)),2)
-            distance_b = round(pow(10,((-77) - (filtered_distance_right_particle[-1]))/(10*2.5)),2)
+            distance_a = round(pow(10,((avg_a) - (filtered_distance_left_particle[-1]))/(10*2.8)),2)
+            distance_b = round(pow(10,((avg_a) - (filtered_distance_right_particle[-1]))/(10*2.8)),2)
         #     # print(filtered_distance_left)
         #     # print(filtered_distance_right)
         #     # tagDB.update({'distance_right':distance_b,'distance_left':distance_a},where('id')==id)
@@ -404,7 +404,8 @@ def deleteESP32(id):
 
 @app.route("/update_esp32_mode/<id>/<mode>",methods=["GET","POST"])
 def updateESP32Mode(id,mode):
-    resetESPdistance()
+    if(int(mode)==1):
+        resetESPdistance()
     esp32PairDBJS.update_one({'id':id},{"$set":{'mode':int(mode),'reset':0}})
     return "1"
 
