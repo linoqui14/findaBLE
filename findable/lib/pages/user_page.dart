@@ -542,7 +542,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                 // print('TAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG');
 
                 DBController.get(command: 'get_tag_where_id_userid', data: {'id':result.device.id.id.toLowerCase(),'userID':widget.user.id.toString()}).then((value) {
-
+                  if(value!.contains("<!doctype html>"))return;
                   var json = jsonDecode(value!);
 
                   Tag tag = Tag.toObject(json);
@@ -578,7 +578,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
           }
 
           for(var tdvice in tagsDevice){
-            print(tdvice['id']);
+            // print(tdvice['id']);
             print(tdvice['count']);
             if(tdvice['count']>=20&&!tdvice['isNotified']){
               tdvice['isNotified'] = true;
@@ -602,15 +602,23 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
               offLineTags.remove(tag);
               print("This Tag is not found ${tdvice['name']}");
             }
-
-            if(element.where((scannedD) =>scannedD.device.id.id.toLowerCase()==tdvice['id'].toLowerCase() ).isEmpty){
-              tagsDevice[tagsDevice.indexOf(tdvice)]['count']++;
-              // print(tdvice['name']);
-              break;
+            bool isFound = false;
+            for(var el in element){
+              print(el);
+              if(el.device.id.id.toLowerCase()==tdvice['id'].toLowerCase()){
+                isFound = true;
+                tagsDevice[tagsDevice.indexOf(tdvice)]['count'] = 0;
+                tagsDevice[tagsDevice.indexOf(tdvice)]['isNotified'] = false;
+                break;
+              }
             }
-            else{
-              tagsDevice[tagsDevice.indexOf(tdvice)]['count'] = 0;
-              tagsDevice[tagsDevice.indexOf(tdvice)]['isNotified'] = false;
+            // if(element.where((scannedD) =>scannedD.device.id.id.toLowerCase()==tdvice['id'].toLowerCase() ).isEmpty){
+            //   tagsDevice[tagsDevice.indexOf(tdvice)]['count']++;
+            //   // print(tagsDevice[tagsDevice.indexOf(tdvice)]);
+            //   break;
+            // }
+            if(!isFound){
+              tagsDevice[tagsDevice.indexOf(tdvice)]['count']++;
               break;
             }
 

@@ -1,7 +1,7 @@
 
 from flask import Flask,request
 # from models import User,Tag,ESP32Pair,tagDB
-from util import kalman_filter,particle_filter
+from util import kalman_filter,particle_filter,gray_filter
 from pymongo import MongoClient
 import datetime
 uri = "mongodb+srv://cluster0.yhuewdl.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority"
@@ -320,8 +320,10 @@ def upsertTag(address,name,distance,espID):
                 this_tag['distance_right'].append(float(distance))
         print(len(tags))
         if len(this_tag['distance_left'])>10 and len(this_tag['distance_right'])>10:
-            filtered_distance_left = kalman_filter(this_tag['distance_left'][1:],A=1, H=1, Q=1.6, R=6)
-            filtered_distance_right = kalman_filter(this_tag['distance_right'][1:],A=1, H=1, Q=1.6, R=6)
+            # filtered_distance_left = kalman_filter(this_tag['distance_left'][1:],A=1, H=1, Q=1.6, R=6)
+            # filtered_distance_right = kalman_filter(this_tag['distance_right'][1:],A=1, H=1, Q=1.6, R=6)
+            filtered_distance_left = gray_filter(this_tag['distance_left'][1:],N=len(this_tag['distance_left']))
+            filtered_distance_right = gray_filter(this_tag['distance_right'][1:],N=len(this_tag['distance_right']))
             filtered_distance_left_particle = particle_filter(filtered_distance_left,A=1, H=1, Q=1.6, R=6,quant_particles=100)
             filtered_distance_right_particle = particle_filter(filtered_distance_right,A=1, H=1, Q=1.6, R=6,quant_particles=100)
             total_a = 0
