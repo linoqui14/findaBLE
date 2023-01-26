@@ -388,9 +388,9 @@ def insertESP32(id):
     esp32 = esp32PairDBJS.insert({'_id':id,'id':id,'distance':0,'reset':0,'mode':0})
     return "1"
     
-@app.route("/update_esp32_reset/<id>/<reset>",methods=["GET","POST"])
-def updateESP32Reset(id,reset):
-    esp32PairDBJS.update_one({'id':id},{"$set":{'reset':int(reset)}})
+@app.route("/update_esp32_reset/<id>",methods=["GET","POST"])
+def updateESP32Reset(id):
+    esp32PairDBJS.update_one({'id':id},{"$set":{'reset':1}})
     return "1"
 
 @app.route("/deleteESP32/<id>",methods=["GET","POST"])
@@ -398,26 +398,16 @@ def deleteESP32(id):
     # esp32PairDB.remove(where("id")==id)
     return "1"
 
-@app.route("/update_esp32_mode/<id>")
-def updateESP32Mode(id):
-    esp = esp32PairDBJS.find_one({'id':id})
-    mode = int(esp['mode'])
-    if mode == 1:
-        mode = 0
-    else:mode = 1
-    esp32PairDBJS.update_one({'id':id},{"$set":{'mode':mode,'reset':1}})
+@app.route("/update_esp32_mode/<id>/<mode>",methods=["GET","POST"])
+def updateESP32Mode(id,mode):
+    esp32PairDBJS.update_one({'id':id},{"$set":{'mode':int(mode),'reset':0}})
     return "1"
-@app.route("/reset_esp_distance")
+@app.route("/reset_esp_distance/",methods=["GET","POST"])
 def resetESPdistance():
     espDistances.clear()
     return '1'
 @app.route("/update_esp32_distance/<id>/<distance>",methods=["GET","POST"])
 def updateESPDistance(id,distance):
-    esp = esp32PairDBJS.find_one({'id':id})
-    reset = int(esp['reset'])
-    if reset == 1:
-        esp32PairDBJS.update_one({'id':id},{"$set":{'reset':0}})
-    
     if len(espDistances)<100:
         espDistances.append(float(distance))
     else :espDistances[-1] = float(distance)
@@ -429,7 +419,7 @@ def updateESPDistance(id,distance):
         for x in espDistances:
             total+=x
         avg = round(total/len(espDistances),2)
-        distance = round(pow(10,((avg) - (filtered_distances[-1]))/(10*2.8)),3)
+        distance = round(pow(10,((avg) - (filtered_distances[-1]))/(10*2.5)),3)
         esp32PairDBJS.update_one({'id':id},{'$set':{'distance':distance}})
 
     else: esp32PairDBJS.update_one({'id':id},{'$set':{'distance':0.0}})
