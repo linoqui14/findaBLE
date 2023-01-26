@@ -68,7 +68,7 @@ void RequestTask( void * parameter) {
             String serverPath = serverName+"update_esp32_mode/"+pairID+"/"+mode;
             http.begin(serverPath.c_str()); 
             int httpResponseCode = http.GET();
-            Serial.println(String(httpResponseCode)+);            
+            Serial.println(String(httpResponseCode)+"asdasdsdasdasdasdasdasd");            
             delay(2000);           
             ESP.restart();      
           }
@@ -150,8 +150,9 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
                 Serial.println(serverPath);     
                 http.begin(serverPath.c_str());
                 int httpResponseCode = http.GET();
-                Serial.println(httpResponseCode);   
+                 Serial.println(httpResponseCode);  
                 
+
               
             }         
           }

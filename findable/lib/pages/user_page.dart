@@ -1839,52 +1839,70 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                   width:110,
                                                   onPressed: (){
 
-
-                                                    DBController.get(command: "update_esp32_mode/${esp.id}/${(esp.mode==1?0:1).toString()}", data: {}).then((value) {
-                                                      print(value);
-
-                                                      Tools.basicDialog(context: context,
-                                                        statefulBuilder: StatefulBuilder(
-                                                            builder: (context,dialogState){
-                                                              return Dialog(
-                                                                backgroundColor: Colors.transparent,
-                                                                child: Container(
-
-                                                                  decoration: BoxDecoration(
-                                                                      color: Colors.white,
-                                                                      borderRadius: BorderRadius.all(Radius.circular(20))
-                                                                  ),
-                                                                  height: 100,
-                                                                  child: Center(
-                                                                    child: Column(
-                                                                      children: [
-                                                                        Text("Please Restart Sensors",style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold),),
-                                                                        Padding(padding: EdgeInsets.only(top: 10)),
-                                                                        CustomTextButton(
-                                                                          onPressed: (){
-                                                                            stateDistanceFunction(() {
-                                                                              esp.mode = esp.mode==1?0:1;
-                                                                              // setState(() {
-                                                                              //
+                                                    Tools.basicDialog(context: context,
+                                                      statefulBuilder: StatefulBuilder(
+                                                          builder: (context,dialogState){
+                                                            return Dialog(
+                                                              backgroundColor: Colors.transparent,
+                                                              child: Container(
+                                                                padding: EdgeInsets.all(10),
+                                                                decoration: BoxDecoration(
+                                                                    color: Colors.white,
+                                                                    borderRadius: BorderRadius.all(Radius.circular(20))
+                                                                ),
+                                                                height: 100,
+                                                                child: Center(
+                                                                  child: Column(
+                                                                    children: [
+                                                                      Text("Please confirm",style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold),),
+                                                                      Padding(padding: EdgeInsets.only(top: 10)),
+                                                                      Row(
+                                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                        children: [
+                                                                          CustomTextButton(
+                                                                            onPressed: (){
+                                                                              // stateDistanceFunction(() {
+                                                                              //   esp.mode = esp.mode==1?0:1;
+                                                                              //   // setState(() {
+                                                                              //   //
+                                                                              //   // });
                                                                               // });
-                                                                            });
-                                                                            Navigator.of(context).pop();
-                                                                          },
-                                                                          color: Colors.blue,
-                                                                          style: TextStyle(fontSize: 8,color: Colors.white),
-                                                                          text: "Confirm",
-                                                                        ),
-                                                                      ],
-                                                                    ),
+                                                                              Navigator.of(context).pop();
+                                                                            },
+                                                                            color: Colors.blue,
+                                                                            style: TextStyle(fontSize: 8,color: Colors.white),
+                                                                            text: "Confirm",
+                                                                          ),
+                                                                          CustomTextButton(
+                                                                            onPressed: (){
+                                                                              DBController.get(command: "update_esp32_reset/${esp.id}", data: {}).then((value) {
+                                                                                stateDistanceFunction(() {
+                                                                                  esp.mode = esp.mode==1?0:1;
+                                                                                  // setState(() {
+                                                                                  //
+                                                                                  // });
+                                                                                });
+
+                                                                              });
+
+                                                                              Navigator.of(context).pop();
+                                                                            },
+                                                                            color: Colors.red,
+                                                                            style: TextStyle(fontSize: 8,color: Colors.white),
+                                                                            text: "Cancel",
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ],
                                                                   ),
                                                                 ),
-                                                              );
-                                                            }
-                                                        ),
-                                                        onPop: ()async=>false,
-                                                      );
+                                                              ),
+                                                            );
+                                                          }
+                                                      ),
+                                                      onPop: ()async=>false,
+                                                    );
 
-                                                    });
 
 
 
