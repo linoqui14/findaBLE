@@ -156,6 +156,8 @@ def addLog():
     userID = request.form['userID']
     roomID = request.form['roomID']
     status = request.form['status']
+    left = request.form['left']
+    right = request.form['right']
     current_time = datetime.datetime.now()
     size = logDB.find()
     count = 0
@@ -168,7 +170,9 @@ def addLog():
         'userID':userID,
         'roomID':roomID,
         'status':status,
-        'log_time':current_time
+        'log_time':current_time,
+        'left':left,
+        'right':right
     })
     return ""
 @app.route("/insert_user/<codep>" , methods=["GET","POST"])
