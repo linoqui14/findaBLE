@@ -404,6 +404,7 @@ def deleteESP32(id):
 
 @app.route("/update_esp32_mode/<id>/<mode>",methods=["GET","POST"])
 def updateESP32Mode(id,mode):
+    resetESPdistance()
     esp32PairDBJS.update_one({'id':id},{"$set":{'mode':int(mode),'reset':0}})
     return "1"
 
