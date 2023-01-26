@@ -150,7 +150,8 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
                 Serial.println(serverPath);     
                 http.begin(serverPath.c_str());
                 int httpResponseCode = http.GET();
-              
+                Serial.println(httpResponseCode);   
+                
               
             }         
           }

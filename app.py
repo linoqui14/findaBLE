@@ -281,7 +281,7 @@ def getTagWhereUserID():
     if tagsJs==None:return []
     return tags
 
-@app.route("/upsert_tag/<address>/<name>/<distance>/<espID>",methods=["GET","POST"])
+@app.route("/upsert_tag/<address>/<name>/<distance>/<espID>",methods=["GET"])
 def upsertTag(address,name,distance,espID):
     id = address
     # print(id)
