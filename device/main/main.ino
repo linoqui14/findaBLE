@@ -29,49 +29,50 @@ float pairDistance = 0.0;
 void RequestTask( void * parameter) {
   int count  = 0;
   for(;;) {
-    
+    // Serial.println(String(DID));
     if(WiFi.status() == WL_CONNECTED){
       if(count==0){
         count = 1;       
       }else{count = 0;}
+      
       if(DID==11){
         HTTPClient http;
         String serverPath = serverName + "get_esp32/"+pairID;
-        http.begin(serverPath.c_str());
+        // http.begin(serverPath.c_str());
         int httpResponseCode = http.GET();
-        // Serial.println(httpResponseCode);
+        Serial.println(httpResponseCode+" asdasdsadasddasd");
         if(httpResponseCode==200&&DID==11){
-          String payload = http.getString();
-          JSONVar myObject = JSON.parse(payload);
-          JSONVar value = myObject["reset"];   
-          String strValue =   JSON.stringify(value);
-          int status = int(strValue[0]);
+          // String payload = http.getString();
+          // JSONVar myObject = JSON.parse(payload);
+          // JSONVar value = myObject["reset"];   
+          // String strValue =   JSON.stringify(value);
+          // int status = int(strValue[0]);
               
           // 48 = 0
           // 1 = advertise
           // 0 = scan
           
                 
-          if(status == 49&&DID==11){
+          // if(status == 49&&DID==11){
           
-            JSONVar value = myObject["mode"];   
-            String strValue =   JSON.stringify(value);
-            mode = int(strValue[0]);
-            // Serial.println(String(mode)+"asdasdsdasdasdasdasdasd");
-            if(mode==49){
-              mode = 0;
-            }
-            else{
-              mode = 1;
-            }
-            HTTPClient http;
-            String serverPath = serverName+"update_esp32_mode/"+pairID+"/"+mode;
-            http.begin(serverPath.c_str()); 
-            int httpResponseCode = http.GET();
-            Serial.println(String(httpResponseCode)+"asdasdsdasdasdasdasdasd");            
-            delay(2000);           
-            ESP.restart();      
-          }
+          //   JSONVar value = myObject["mode"];   
+          //   String strValue =   JSON.stringify(value);
+          //   mode = int(strValue[0]);
+          //   // Serial.println(String(mode)+"asdasdsdasdasdasdasdasd");
+          //   if(mode==49){
+          //     mode = 0;
+          //   }
+          //   else{
+          //     mode = 1;
+          //   }
+          //   HTTPClient http;
+          //   String serverPath = serverName+"update_esp32_mode/"+pairID+"/"+mode;
+          //   http.begin(serverPath.c_str()); 
+          //   int httpResponseCode = http.GET();
+          //   Serial.println(String(httpResponseCode)+"asdasdsdasdasdasdasdasd");            
+          //   delay(2000);           
+          //   ESP.restart();      
+          // }
         }
         else if(DID==11){
           HTTPClient http;
@@ -117,8 +118,8 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
           // Serial.println("Advertised Device: %s", advertisedDevice.toString().c_str());
           // Serial.println(advertisedDevice.getName().compare("iTAG            "));
           Serial.println(advertisedDevice.getName().c_str());
-          // if(advertisedDevice.getName().compare("iTAG            ")==0||advertisedDevice.getName().compare("ESP32-11")==0){
-          if(true){
+          if(advertisedDevice.getName().compare("iTAG            ")==0||advertisedDevice.getName().compare("ESP32-11")==0){
+          // if(true){
             int rssi = advertisedDevice.getRSSI();
            
                      
@@ -137,7 +138,7 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
               // Serial.print("Distance: ");
               // Serial.println(pairDistance); 
             }
-            if(WiFi.status() == WL_CONNECTED&&advertisedDevice.getName().compare("iTAG            ")==0){
+            if((advertisedDevice.getName().compare("iTAG            ")==0)){
               HTTPClient http;
               String name = advertisedDevice.getName().c_str();
               name.replace(" ","");
