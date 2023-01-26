@@ -503,6 +503,11 @@ def getRoom():
     return rooms
     # print("ASdasd")
     # return "asdasd"
+@app.route("/get_room_with_id/",methods=["GET","POST"])
+def getRoomWithID():
+    id = request.form['id'] 
+    return roomDBJS.find_one({'id':id})
+
 
 @app.route("/get_room_where_esp",methods=["GET","POST"])
 def getRoomWhereESP():
