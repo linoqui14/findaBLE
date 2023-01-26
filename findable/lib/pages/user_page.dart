@@ -897,7 +897,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                   bool tooFar =  log.status.contains('faraway');
                                                   return GestureDetector(
                                                     child: Container(
-                                                      margin: EdgeInsets.only(bottom: 5),
+                                                        margin: EdgeInsets.only(bottom: 5),
                                                         padding: EdgeInsets.all(10),
                                                         decoration: BoxDecoration(
                                                             color:tooFar?Colors.redAccent.withAlpha(100):Colors.blue.withAlpha(100),
@@ -923,118 +923,119 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                 width: 200,
                                                                 text: "Locate Last Location",
                                                                 onPressed: (){
-                                                                    DBController.get(command: "get_room/", data: {'userID':widget.user.id.toString()}).then((roomJSON) {
-                                                                      
-                                                                      DBController.get(command: 'get_esp32/'+e.espID, data: {}).then((esp_res) {
-                                                                        ESP esp = ESP.toObject(jsonDecode(esp_res!));
-                                                                        double k = 250/esp.sensorDistance;
-                                                                        double x=0,y=0;
-                                                                        DBController.get(command: "get_tag_pos", data: {'tagID':e.id.toLowerCase()}).then((value){
+                                                                  DBController.get(command: "get_room_with_id/", data: {'id':log.roomID}).then((roomJSON) {
+                                                                    Room room = Room.toObject(jsonDecode(roomJSON!));
+                                                                    DBController.get(command: 'get_esp32/'+room.esp32ID, data: {}).then((esp_res) {
+                                                                      ESP esp = ESP.toObject(jsonDecode(esp_res!));
+                                                                      double k = 250/esp.sensorDistance;
+                                                                      double x=0,y=0;
+                                                                      double a = log.left;
+                                                                      double b = log.right;
+                                                                      double c = esp.sensorDistance;
+                                                                      double cos_a = ((pow(b,2)+pow(c,2))-pow(a,2))/(2*b*c);
+                                                                      x = b * cos_a;
+                                                                      y = b * sqrt(1-pow(cos_a,2));
+                                                                      print(x);
+                                                                      print(y);
+                                                                      // Tools.basicDialog(
+                                                                      //     onPop: (){
+                                                                      //       setState(() {
+                                                                      //         currentSelectedTag = null;
+                                                                      //       });
+                                                                      //       return Future<bool>.value(true);
+                                                                      //     },
+                                                                      //     context: context,
+                                                                      //     statefulBuilder: StatefulBuilder(
+                                                                      //         builder: (context,setState3){
+                                                                      //
+                                                                      //           return Dialog(
+                                                                      //             elevation: 0,
+                                                                      //             backgroundColor: Colors.transparent,
+                                                                      //             alignment: Alignment.center,
+                                                                      //             child: SingleChildScrollView(
+                                                                      //               child: Column(
+                                                                      //                 mainAxisAlignment: MainAxisAlignment.center,
+                                                                      //                 crossAxisAlignment: CrossAxisAlignment.start,
+                                                                      //                 children: [
+                                                                      //                   Text("${e.name} Location",style:GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 25) ,),
+                                                                      //                   Container(
+                                                                      //                     height: 330,
+                                                                      //                     width: double.infinity,
+                                                                      //                     decoration: BoxDecoration(
+                                                                      //                         color: Colors.white,
+                                                                      //                         borderRadius: BorderRadius.all(Radius.circular(20))
+                                                                      //                     ),
+                                                                      //                     child: Column(
+                                                                      //
+                                                                      //                       children: [
+                                                                      //
+                                                                      //                         Expanded(
+                                                                      //                           child: Stack(
+                                                                      //                             children: [
+                                                                      //                               Positioned(
+                                                                      //                                 child: Column(
+                                                                      //                                   children: [
+                                                                      //                                     Icon(Icons.sensors,color: Colors.blue,),
+                                                                      //                                     Text("${e.name}",style: TextStyle(fontSize: 10),),
+                                                                      //                                     Text("(${esp.sensorDistance.toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
+                                                                      //                                   ],
+                                                                      //                                 ),
+                                                                      //                                 right: 2,
+                                                                      //                                 top: 5,
+                                                                      //                               ),
+                                                                      //                               Positioned(
+                                                                      //                                 child: Column(
+                                                                      //                                   children: [
+                                                                      //                                     Icon(Icons.sensors,color: Colors.blue,),
+                                                                      //                                     // Text("${esp}",style: TextStyle(fontSize: 10),),
+                                                                      //                                     Text("(0,0)",style: TextStyle(fontSize: 5),),
+                                                                      //                                   ],
+                                                                      //                                 ),
+                                                                      //                                 right: 248,
+                                                                      //                                 top: 5,
+                                                                      //                               ),
+                                                                      //                               Positioned(
+                                                                      //                                 child: Column(
+                                                                      //                                   children: [
+                                                                      //                                     Icon(Icons.place,color: Colors.blue,),
+                                                                      //                                     Text("${e.name}",style: TextStyle(fontSize: 10),),
+                                                                      //                                     Text("(${(x).toStringAsFixed(2)},${(y).toStringAsFixed(2)})",style: TextStyle(fontSize: 5),),
+                                                                      //                                   ],
+                                                                      //                                 ),
+                                                                      //                                 left:  (x.abs()*k).abs(),
+                                                                      //                                 top: (y.abs()*k).abs(),
+                                                                      //                               ),
+                                                                      //                               // CustomPaint(
+                                                                      //                               //   painter: LinePainter(),
+                                                                      //                               // ),
+                                                                      //                             ],
+                                                                      //                           ),
+                                                                      //                         ),
+                                                                      //                       ],
+                                                                      //                     ),
+                                                                      //                   ),
+                                                                      //                   Padding(padding: EdgeInsets.only(top: 5)),
+                                                                      //                   Center(child: Column(
+                                                                      //                     children: [
+                                                                      //                       Text("Last Location Time Date",style: TextStyle(color: Colors.white),),
+                                                                      //                       Text(date,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),),
+                                                                      //                     ],
+                                                                      //                   ))
+                                                                      //
+                                                                      //                 ],
+                                                                      //               ),
+                                                                      //             ),
+                                                                      //           );
+                                                                      //         }
+                                                                      //     )
+                                                                      //
+                                                                      // );
 
-                                                                          var json = jsonDecode(value!);
-                                                                          x = json['x'];
-                                                                          y = json['y'];
-                                                                          print(x);
-                                                                          print(y);
-                                                                          Tools.basicDialog(
-                                                                              onPop: (){
-                                                                                setState(() {
-                                                                                  currentSelectedTag = null;
-                                                                                });
-                                                                                return Future<bool>.value(true);
-                                                                              },
-                                                                              context: context,
-                                                                              statefulBuilder: StatefulBuilder(
-                                                                                  builder: (context,setState3){
 
-                                                                                    return Dialog(
-                                                                                      elevation: 0,
-                                                                                      backgroundColor: Colors.transparent,
-                                                                                      alignment: Alignment.center,
-                                                                                      child: SingleChildScrollView(
-                                                                                        child: Column(
-                                                                                          mainAxisAlignment: MainAxisAlignment.center,
-                                                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                                                          children: [
-                                                                                            Text("${e.name} Location",style:GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 25) ,),
-                                                                                            Container(
-                                                                                              height: 330,
-                                                                                              width: double.infinity,
-                                                                                              decoration: BoxDecoration(
-                                                                                                  color: Colors.white,
-                                                                                                  borderRadius: BorderRadius.all(Radius.circular(20))
-                                                                                              ),
-                                                                                              child: Column(
-
-                                                                                                children: [
-
-                                                                                                  Expanded(
-                                                                                                    child: Stack(
-                                                                                                      children: [
-                                                                                                        Positioned(
-                                                                                                          child: Column(
-                                                                                                            children: [
-                                                                                                              Icon(Icons.sensors,color: Colors.blue,),
-                                                                                                              Text("${e.name}",style: TextStyle(fontSize: 10),),
-                                                                                                              Text("(${esp.sensorDistance.toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
-                                                                                                            ],
-                                                                                                          ),
-                                                                                                          right: 2,
-                                                                                                          top: 5,
-                                                                                                        ),
-                                                                                                        Positioned(
-                                                                                                          child: Column(
-                                                                                                            children: [
-                                                                                                              Icon(Icons.sensors,color: Colors.blue,),
-                                                                                                              // Text("${esp}",style: TextStyle(fontSize: 10),),
-                                                                                                              Text("(0,0)",style: TextStyle(fontSize: 5),),
-                                                                                                            ],
-                                                                                                          ),
-                                                                                                          right: 248,
-                                                                                                          top: 5,
-                                                                                                        ),
-                                                                                                        Positioned(
-                                                                                                          child: Column(
-                                                                                                            children: [
-                                                                                                              Icon(Icons.place,color: Colors.blue,),
-                                                                                                              Text("${e.name}",style: TextStyle(fontSize: 10),),
-                                                                                                              Text("(${(x).toStringAsFixed(2)},${(y).toStringAsFixed(2)})",style: TextStyle(fontSize: 5),),
-                                                                                                            ],
-                                                                                                          ),
-                                                                                                          left:  (x.abs()*k).abs(),
-                                                                                                          top: (y.abs()*k).abs(),
-                                                                                                        ),
-                                                                                                        // CustomPaint(
-                                                                                                        //   painter: LinePainter(),
-                                                                                                        // ),
-                                                                                                      ],
-                                                                                                    ),
-                                                                                                  ),
-                                                                                                ],
-                                                                                              ),
-                                                                                            ),
-                                                                                            Padding(padding: EdgeInsets.only(top: 5)),
-                                                                                            Center(child: Column(
-                                                                                              children: [
-                                                                                                Text("Last Location Time Date",style: TextStyle(color: Colors.white),),
-                                                                                                Text(date,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),),
-                                                                                              ],
-                                                                                            ))
-
-                                                                                          ],
-                                                                                        ),
-                                                                                      ),
-                                                                                    );
-                                                                                  }
-                                                                              )
-
-                                                                          );
-
-                                                                        });
-
-                                                                      });
 
                                                                     });
+
+                                                                  });
 
                                                                 },
                                                               )

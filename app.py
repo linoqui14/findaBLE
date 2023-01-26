@@ -76,6 +76,8 @@ def tag_pos(a, b, c,id):
         })
     
     return {'x':round(x.real, 2), 'y':round(y.real, 2)}
+@app.route("/get_offline" , methods=["GET","POST"])
+
 @app.route("/reset_tag_pos" , methods=["GET","POST"])
 def resetTagPos():
     tagID = request.form['tagID']
@@ -130,8 +132,8 @@ def getTagPos():
         if(tag==None):
             return {"x":-1.0,'y':-1.0,'len':len(x['x'])}
 
-        b = tag['distance_left']
-        a = tag['distance_right']
+        a = tag['distance_left']
+        b = tag['distance_right']
 
         pos = tag_pos(a,b,c,tag['id'])
         for x in tagsWithRDistance:
@@ -333,7 +335,7 @@ def upsertTag(address,name,distance,espID):
             avg_b = round(total_b/len(filtered_distance_right_particle),2)
             
             distance_a = round(pow(10,((avg_a) - (filtered_distance_left_particle[-1]))/(10*2.8)),2)
-            distance_b = round(pow(10,((avg_a) - (filtered_distance_right_particle[-1]))/(10*2.8)),2)
+            distance_b = round(pow(10,((avg_b) - (filtered_distance_right_particle[-1]))/(10*2.8)),2)
         #     # print(filtered_distance_left)
         #     # print(filtered_distance_right)
         #     # tagDB.update({'distance_right':distance_b,'distance_left':distance_a},where('id')==id)
