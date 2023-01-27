@@ -65,6 +65,7 @@ void RequestTask( void * parameter) {
           //   else{
           //     mode = 1;
           //   }
+          //   delay(3000);
           //   HTTPClient http;
           //   String serverPath = serverName+"update_esp32_mode/"+pairID+"/"+mode;
           //   http.begin(serverPath.c_str()); 
@@ -79,8 +80,8 @@ void RequestTask( void * parameter) {
           String serverPath = serverName+"/insert_esp32/"+pairID;
           http.begin(serverPath.c_str()); 
           httpResponseCode = http.GET();
-        } delay(3000); 
-        
+        } 
+        delay(5000); 
       }   
        
       
@@ -133,12 +134,13 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
                   String serverPath = serverName+"/update_esp32_distance/"+pairID+"/"+String(pairDistance);
                   http.begin(serverPath.c_str()); 
                   int httpResponseCode = http.GET();
+                  Serial.println(httpResponseCode);  
                   
                 }
               // Serial.print("Distance: ");
               // Serial.println(pairDistance); 
             }
-            if((advertisedDevice.getName().compare("iTAG            ")==0)){
+            if((advertisedDevice.getName().compare("iTAG            ")==0)&&mode==0){
               HTTPClient http;
               String name = advertisedDevice.getName().c_str();
               name.replace(" ","");
@@ -151,10 +153,7 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
                 Serial.println(serverPath);     
                 http.begin(serverPath.c_str());
                 int httpResponseCode = http.GET();
-                 Serial.println(httpResponseCode);  
-                
-
-              
+                Serial.println(httpResponseCode);  
             }         
           }
           
@@ -235,7 +234,7 @@ void setup() {
     pBLEScan = BLEDevice::getScan(); //create new scan
     pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
     pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
-    pBLEScan->setInterval(100);
+    pBLEScan->setInterval(800);
     pBLEScan->setWindow(99);  // less or equal setInterval value
   }  
  
