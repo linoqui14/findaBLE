@@ -502,7 +502,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
     _tabController = new TabController(length: 1, vsync: this);
     timer = Timer.periodic(Duration(seconds: 2), (timer) {
 
-      Future.delayed(Duration(seconds: 2), () {
+      Future.delayed(Duration(seconds: 3), () {
         flutterBlue.startScan();
 
 
@@ -1447,8 +1447,8 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                                                                       Text("(${(x).toStringAsFixed(2)},${(y).toStringAsFixed(2)})",style: TextStyle(fontSize: 5),),
                                                                                                                     ],
                                                                                                                   ),
-                                                                                                                  left:  (x.abs()*k).abs(),
-                                                                                                                  top: (y.abs()*k).abs(),
+                                                                                                                  left:  (x.abs()*k).abs()<=0?-1*(x.abs()*k).abs():(x.abs()*k).abs()>k?k:(x.abs()*k).abs(),
+                                                                                                                  top: (y.abs()*k).abs()<=0?-1*(y.abs()*k).abs():(y.abs()*k).abs()>k?k:(y.abs()*k).abs(),
                                                                                                                 ),
                                                                                                                 // CustomPaint(
                                                                                                                 //   painter: LinePainter(),
