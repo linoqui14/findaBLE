@@ -14,10 +14,11 @@
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 #define EEPROM_SIZE 1
 
-const char* ssid = "waypaynimama221x-far";
-const char* password = "_Waypaynimama22221xyzq";
+const char* ssid = "GlobeAtHome_9FA0E";
+const char* password = "BJHETEQR0R0";
 
-String serverName = "https://findable.onrender.com/";
+// String serverName = "https://findable.onrender.com/";
+String serverName = "http://192.168.254.100:5000/";
 TaskHandle_t requestTask;
 int scanTime = 5; //In seconds
 BLEScan* pBLEScan;
@@ -212,7 +213,7 @@ void setup() {
   // EEPROM.write(0, 11);
   // EEPROM.commit();
   if(DID==255){
-    EEPROM.write(0, 11);
+    EEPROM.write(0, 10);
     EEPROM.commit();
   }
   if(DID==11&&mode==1){
@@ -234,7 +235,7 @@ void setup() {
     pBLEScan = BLEDevice::getScan(); //create new scan
     pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
     pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
-    pBLEScan->setInterval(800);
+    pBLEScan->setInterval(100);
     pBLEScan->setWindow(99);  // less or equal setInterval value
   }  
  

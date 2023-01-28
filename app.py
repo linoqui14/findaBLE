@@ -45,35 +45,35 @@ def tag_pos(a, b, c,id):
     cos_a = (((b * b) + (c*c) - (a * a))) / (2 * b * c)
     x = b * cos_a
     y = b * cmath.sqrt(1 - (cos_a * cos_a))
-    for tagwd in tagsWithRDistance:
-        if tagwd['id'] == id:
-            isRecorded = True
-            break
+    # for tagwd in tagsWithRDistance:
+    #     if tagwd['id'] == id:
+    #         isRecorded = True
+    #         break
 
-    if isRecorded:
-        for tag in tagsWithRDistance:
-            if tag['id'] == id:
-                xTotal = 0
-                yTotal = 0
-                xAVG = 0
-                yAVG = 0
-                for xv in tag['x']:
-                    xTotal+=xv
-                for yv in tag['y']:
-                    yTotal+=yv
-                xAVG = xTotal/len(tag['x'])
-                yAVG = yTotal/len(tag['y'])
-                tag['x'].append(x)
-                tag['y'].append(y)
-                return {'x':round(xAVG.real, 2), 'y':round(yAVG.real, 2)}
+    # if isRecorded:
+    #     for tag in tagsWithRDistance:
+    #         if tag['id'] == id:
+    #             xTotal = 0
+    #             yTotal = 0
+    #             xAVG = 0
+    #             yAVG = 0
+    #             for xv in tag['x']:
+    #                 xTotal+=xv
+    #             for yv in tag['y']:
+    #                 yTotal+=yv
+    #             xAVG = xTotal/len(tag['x'])
+    #             yAVG = yTotal/len(tag['y'])
+    #             tag['x'].append(x)
+    #             tag['y'].append(y)
+    #             return {'x':round(xAVG.real, 2), 'y':round(yAVG.real, 2)}
                 
-        pass
-    else:
-        tagsWithRDistance.append({
-            'id':id,
-            'x':[x,],
-            'y':[y,]
-        })
+    #     pass
+    # else:
+    #     tagsWithRDistance.append({
+    #         'id':id,
+    #         'x':[x,],
+    #         'y':[y,]
+    #     })
     
     return {'x':round(x.real, 2), 'y':round(y.real, 2)}
 @app.route("/get_offline" , methods=["GET","POST"])
@@ -102,20 +102,21 @@ def getTagPos():
         c = esp32PairDBJS.find_one({'id':"1011"})
         c = c['distance']
         tag = tagDBJS.find_one({'id':tagID})
-        b = tag['distance_left']
-        a = tag['distance_right']
-        pos = tag_pos(a,b,c,tag['id'])
-        for x in tagsWithRDistance:
-            if x['id'] == tag['id']:
-                print(len(x['x']))
-                if len(x['x'])>=20:
-                    return pos
-                if len(x['x'])>=35:
-                    # resetTagPosHalf(tagID)
-                    pass
-                break
+        a = tag['distance_left']
+        b = tag['distance_right']
+        pos = tag_pos(a,b,(c),tag['id'])
+        return {'left':a,'right':b,'len':20}
+        # for x in tagsWithRDistance:
+        #     if x['id'] == tag['id']:
+        #         print(len(x['x']))
+        #         if len(x['x'])>=20:
+        #             return pos
+        #         if len(x['x'])>=35:
+        #             # resetTagPosHalf(tagID)
+        #             pass
+        #         break
         
-        return {"x":-1.0,'y':-1.0,'len':len(x['x'])}
+        # return {"x":-1.0,'y':-1.0,'len':len(x['x'])}
     except:
         filtered_distances = kalman_filter(espDistances,A=1, H=1, Q=1.6, R=6)
         print(len(espDistances))
@@ -135,14 +136,15 @@ def getTagPos():
         a = tag['distance_left']
         b = tag['distance_right']
 
-        pos = tag_pos(a,b,c,tag['id'])
-        for x in tagsWithRDistance:
-            if x['id'] == tag['id']:
-                if len(x['x'])>=20:
-                    return pos
-                break
+        pos = tag_pos(a,b,(c),tag['id'])
+        return {'left':a,'right':b,'len':20}
+        # for x in tagsWithRDistance:
+        #     if x['id'] == tag['id']:
+        #         if len(x['x'])>=20:
+        #             return pos
+        #         break
         
-        return {"x":-1.0,'y':-1.0,'len':len(x['x'])}
+        # return {"x":-1.0,'y':-1.0,'len':len(x['x'])}
 
 @app.route("/get_logs" , methods=["GET","POST"])
 def getLogs():
@@ -336,8 +338,8 @@ def upsertTag(address,name,distance,espID):
             avg_a = round(total_a/len(filtered_distance_left_particle),2)
             avg_b = round(total_b/len(filtered_distance_right_particle),2)
             
-            distance_a = round(pow(10,((avg_a) - (filtered_distance_left_particle[-1]))/(10*2.8)),2)
-            distance_b = round(pow(10,((avg_b) - (filtered_distance_right_particle[-1]))/(10*2.8)),2)
+            distance_a = round(pow(10,((avg_a) - (filtered_distance_left_particle[-1]))/(10*2.5)),2)
+            distance_b = round(pow(10,((avg_b) - (filtered_distance_right_particle[-1]))/(10*2.5)),2)
         #     # print(filtered_distance_left)
         #     # print(filtered_distance_right)
         #     # tagDB.update({'distance_right':distance_b,'distance_left':distance_a},where('id')==id)
@@ -393,7 +395,10 @@ def updateTagUserID():
 
 @app.route("/insert_esp32/<id>",methods=["GET","POST"])
 def insertESP32(id):
-    esp32 = esp32PairDBJS.insert({'_id':id,'id':id,'distance':0,'reset':0,'mode':0})
+    try:
+        esp32 = esp32PairDBJS.insert_one({'_id':id,'id':id,'distance':0,'reset':0,'mode':0})
+    except:
+        pass
     return "1"
 
 def resetESPdistance():
@@ -523,5 +528,5 @@ def getRoomWhereESP():
     return room
 
 
-# if __name__ == '__main__':
-#     app.run('0.0.0.0')
+if __name__ == '__main__':
+    app.run('0.0.0.0')

@@ -83,7 +83,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                 });
                 DBController.get(command: "get_esp32/${tag.espID}", data: {}).then((value) {
                   ESP esp = ESP.toObject(jsonDecode(value!));
-                  double k = 250/esp.sensorDistance;
+                  double k = 250/(esp.sensorDistance*2);
                   double x=-1,y=-1;
                   int currentcount = 0;
                   late Function(Function()) setStateMap;
@@ -357,7 +357,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                 String date = jsonDecode(value!)['date_update'];
                 DBController.get(command: 'get_esp32/'+e.espID, data: {}).then((esp_res) {
                   ESP esp = ESP.toObject(jsonDecode(esp_res!));
-                  double k = 250/esp.sensorDistance;
+                  double k = 250/(esp.sensorDistance*2);
                   double x=0,y=0;
                   DBController.get(command: "get_tag_pos", data: {'tagID':e.id.toLowerCase()}).then((value){
 
@@ -406,7 +406,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                       children: [
                                                         Icon(Icons.sensors,color: Colors.blue,),
                                                         Text("${e.name}",style: TextStyle(fontSize: 10),),
-                                                        Text("(${esp.sensorDistance.toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
+                                                        Text("(${(esp.sensorDistance*2).toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
                                                       ],
                                                     ),
                                                     right: 2,
@@ -935,13 +935,13 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                     Room room = Room.toObject(jsonDecode(roomJSON!));
                                                                     DBController.get(command: 'get_esp32/'+room.esp32ID, data: {}).then((esp_res) {
                                                                       ESP esp = ESP.toObject(jsonDecode(esp_res!));
-                                                                      double k = 250/esp.sensorDistance;
+                                                                      double k = 250/(esp.sensorDistance*2);
                                                                       double x=0,y=0;
 
 
                                                                       double a = log.left;
                                                                       double b = log.right;
-                                                                      double c = esp.sensorDistance;
+                                                                      double c = (esp.sensorDistance*2);
                                                                       double cos_a = ((pow(b,2)+pow(c,2))-pow(a,2))/(2*b*c);
                                                                       x = b * cos_a;
                                                                       y = (b * sqrt((1-pow(cos_a,2)).abs()));
@@ -987,7 +987,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                                                         children: [
                                                                                                           Icon(Icons.sensors,color: Colors.blue,),
                                                                                                           // Text("${e.name}",style: TextStyle(fontSize: 10),),
-                                                                                                          Text("(${esp.sensorDistance.toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
+                                                                                                          Text("(${(esp.sensorDistance*2).toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
                                                                                                         ],
                                                                                                       ),
                                                                                                       right: 2,
@@ -1012,8 +1012,8 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                                                           Text("(${(x).toStringAsFixed(2)},${(y).toStringAsFixed(2)})",style: TextStyle(fontSize: 5),),
                                                                                                         ],
                                                                                                       ),
-                                                                                                      left:  (x.abs()*k).abs(),
-                                                                                                      top: (y.abs()*k).abs(),
+                                                                                                      left:  (x.abs()*k).abs()<0?(x.abs()*k).abs()*-1:(x.abs()*k).abs()>k?k:(x.abs()*k).abs(),
+                                                                                                      top:(y.abs()*k).abs()<0?(y.abs()*k).abs()*-1:(y.abs()*k).abs()>k?k:(y.abs()*k).abs(),
                                                                                                     ),
                                                                                                     // CustomPaint(
                                                                                                     //   painter: LinePainter(),
@@ -1130,7 +1130,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                           DBController.get(command: "get_esp32/${esp.id}", data: {}).then((value) {
 
                                             esp = ESP.toObject(jsonDecode(value!));
-                                            Future.delayed(Duration(seconds: 2), (){
+                                            Future.delayed(Duration(seconds: 5), (){
                                               stateDistanceFunction((){
                                                 getESP();
                                               });
@@ -1199,7 +1199,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                         if(esp.sensorDistance<=0)
                                                                           CircularProgressIndicator(color: Colors.indigo,),
                                                                         if(esp.sensorDistance>0)
-                                                                          Text(esp.sensorDistance.toStringAsPrecision(2)+"m",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 13),),
+                                                                          Text((esp.sensorDistance*2).toStringAsPrecision(2)+"m",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 13),),
                                                                       ],
                                                                     ),
 
@@ -1247,268 +1247,275 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                           child: Row(
                                                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                             children: [
-                                                                              GestureDetector(
-                                                                                onTap: (){
-                                                                                  setState(() {
-                                                                                    currentSelectedTag = e;
-                                                                                  });
-                                                                                  DBController.get(command: "reset_tag_pos", data: {'tagID':e.id.toLowerCase()}).then((value) {
+                                                                              Expanded(
+                                                                                child: GestureDetector(
+                                                                                  onTap: (){
+                                                                                    setState(() {
+                                                                                      currentSelectedTag = e;
+                                                                                    });
+                                                                                    DBController.get(command: "reset_tag_pos", data: {'tagID':e.id.toLowerCase()}).then((value) {
 
-                                                                                  });
-                                                                                  TextEditingController tagName = TextEditingController(text: e.name);
-                                                                                  bool isEdit = false;
-                                                                                  double k = 250/esp.sensorDistance;
-                                                                                  double x=-1,y=-1;
-                                                                                  int currentcount = 0;
-                                                                                  late Function(Function()) setStateMap;
-                                                                                  Function(Function())? setLoadingState;
-                                                                                  getPos(){
+                                                                                    });
+                                                                                    TextEditingController tagName = TextEditingController(text: e.name);
+                                                                                    bool isEdit = false;
+                                                                                    double k = 250/(esp.sensorDistance*2);
+                                                                                    double x=-1,y=-1;
+
+                                                                                    int currentcount = 0;
+                                                                                    late Function(Function()) setStateMap;
+                                                                                    Function(Function())? setLoadingState;
+                                                                                    getPos(){
 
 
-                                                                                    DBController.get(command: "get_tag_pos", data: {'tagID':e.id.toLowerCase()}).then((value){
+                                                                                      DBController.get(command: "get_tag_pos", data: {'tagID':e.id.toLowerCase()}).then((value){
 
-                                                                                      Future.delayed(Duration(seconds:3), () {
-                                                                                      }).then((n) {
-                                                                                        var json = jsonDecode(value!);
-                                                                                        if(setLoadingState!=null){
-                                                                                          setLoadingState!((){
-                                                                                            if(json['len']!=null){
-                                                                                              currentcount = (json['len']+1);
-                                                                                            }
+                                                                                        Future.delayed(Duration(seconds:3), () {
+                                                                                        }).then((n) {
+                                                                                          var json = jsonDecode(value!);
+                                                                                          if(setLoadingState!=null){
+                                                                                            setLoadingState!((){
+                                                                                              if(json['len']!=null){
+                                                                                                currentcount = (json['len']+1);
+                                                                                              }
 
+                                                                                            });
+                                                                                          }
+
+                                                                                          setStateMap((){
+                                                                                            print(value);
+                                                                                            print("asdasdasdaasasdasdasdas");
+                                                                                            double a =json['left'];
+                                                                                            double b =json['right'];
+                                                                                            double c = (esp.sensorDistance*2);
+                                                                                            double cos_a = ((pow(b,2)+pow(c,2))-pow(a,2))/(2*b*c);
+                                                                                            x = b * cos_a;
+                                                                                            y = (b * sqrt((1-pow(cos_a,2)).abs()));
+
+                                                                                            // x = json['x'];
+                                                                                            // y = json['y'];
+
+                                                                                            getPos();
+                                                                                            // print(x);
+                                                                                            // print(y);
                                                                                           });
-                                                                                        }
-
-                                                                                        setStateMap((){
-                                                                                          print(value);
-                                                                                          print("asdasdasdaasasdasdasdas");
-
-                                                                                          x = json['x'];
-                                                                                          y = json['y'];
-
-                                                                                          getPos();
-                                                                                          // print(x);
-                                                                                          // print(y);
                                                                                         });
                                                                                       });
-                                                                                    });
 
 
-                                                                                  }
+                                                                                    }
 
-                                                                                  getPos();
-                                                                                  Tools.basicDialog(
-                                                                                      onPop: (){
-                                                                                        setState(() {
-                                                                                          currentSelectedTag = null;
-                                                                                          updateCurrentDistance = null;
-                                                                                        });
-                                                                                        return Future<bool>.value(true);
-                                                                                      },
-                                                                                      context: context,
-                                                                                      statefulBuilder: StatefulBuilder(
-                                                                                          builder: (context,setState3){
-                                                                                            setStateMap = setState3;
-                                                                                            if(x==-1&&y==-1){
-                                                                                              return Dialog(
-                                                                                                alignment: Alignment.center,
-                                                                                                child: Container(
+                                                                                    getPos();
+                                                                                    Tools.basicDialog(
+                                                                                        onPop: (){
+                                                                                          setState(() {
+                                                                                            currentSelectedTag = null;
+                                                                                            updateCurrentDistance = null;
+                                                                                          });
+                                                                                          return Future<bool>.value(true);
+                                                                                        },
+                                                                                        context: context,
+                                                                                        statefulBuilder: StatefulBuilder(
+                                                                                            builder: (context,setState3){
+                                                                                              setStateMap = setState3;
+                                                                                              if(x==-1&&y==-1){
+                                                                                                return Dialog(
                                                                                                   alignment: Alignment.center,
-                                                                                                  height: 150,
-                                                                                                  width: double.infinity,
-                                                                                                  child: Center(
-                                                                                                    child: Column(
-                                                                                                      mainAxisAlignment: MainAxisAlignment.center,
-                                                                                                      children: [
-                                                                                                        Row(
-                                                                                                          mainAxisAlignment: MainAxisAlignment.center,
-                                                                                                          children: [
-                                                                                                            Text("Locating ",style: TextStyle(fontSize: 12,fontWeight: FontWeight.w100)),
-                                                                                                            Text(e.name,style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold),),
-                                                                                                          ],
-                                                                                                        ),
-
-                                                                                                        Lottie.network('https://assets3.lottiefiles.com/packages/lf20_tIKIYX.json',width: 100,height: 80),
-                                                                                                        StatefulBuilder(
-                                                                                                            builder: (context,loadingState) {
-                                                                                                              if(currentcount>=20){
-                                                                                                                setLoadingState = null;
-                                                                                                              }
-                                                                                                              else{
-                                                                                                                setLoadingState = loadingState;
-                                                                                                              }
-
-                                                                                                              return Row(
-                                                                                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                                                                                children: [
-                                                                                                                  Text("${((currentcount/20)*100).round()}",style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold)),
-                                                                                                                  Text("%",style: TextStyle(fontSize: 15,fontWeight: FontWeight.w100)),
-                                                                                                                ],
-                                                                                                              );
-                                                                                                            }
-                                                                                                        ),
-                                                                                                      ],
-                                                                                                    ),
-                                                                                                  ),
-                                                                                                ),
-                                                                                              );
-                                                                                            }
-                                                                                            return Dialog(
-                                                                                              elevation: 0,
-                                                                                              backgroundColor: Colors.transparent,
-                                                                                              alignment: Alignment.center,
-                                                                                              child: SingleChildScrollView(
-                                                                                                child: Column(
-                                                                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                                                                  children: [
-                                                                                                    Row(
-                                                                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                                                      children: [
-                                                                                                        Column(
-                                                                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                                                                          children: [
-                                                                                                            Text("Your",style:TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 10) ,),
-                                                                                                            Text("${e.name}",style:GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 25) ,),
-                                                                                                          ],
-                                                                                                        ),
-                                                                                                        StatefulBuilder(
-                                                                                                            builder: (context,updateDistance) {
-                                                                                                              updateCurrentDistance = updateDistance;
-                                                                                                              if(currentSelectedTagDistance<=.5){
-                                                                                                                Vibrate.vibrate();
-                                                                                                              }
-                                                                                                              return Column(
-                                                                                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                                                                                children: [
-                                                                                                                  Text("Distance From You",style:TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 10) ,),
-                                                                                                                  Text("${currentSelectedTagDistance.toStringAsFixed(3)}m",style:GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 25) ,),
-                                                                                                                ],
-                                                                                                              );
-                                                                                                            }
-                                                                                                        ),
-                                                                                                      ],
-                                                                                                    ),
-
-
-                                                                                                    Container(
-                                                                                                      height: 330,
-                                                                                                      width: double.infinity,
-                                                                                                      decoration: BoxDecoration(
-                                                                                                          color: Colors.white,
-                                                                                                          borderRadius: BorderRadius.all(Radius.circular(20))
-                                                                                                      ),
+                                                                                                  child: Container(
+                                                                                                    alignment: Alignment.center,
+                                                                                                    height: 150,
+                                                                                                    width: double.infinity,
+                                                                                                    child: Center(
                                                                                                       child: Column(
-
+                                                                                                        mainAxisAlignment: MainAxisAlignment.center,
                                                                                                         children: [
-                                                                                                          Expanded(
-                                                                                                            child: Stack(
-                                                                                                              children: [
-                                                                                                                Positioned(
-                                                                                                                  child: Column(
-                                                                                                                    children: [
-                                                                                                                      Icon(Icons.sensors,color: Colors.blue,),
-                                                                                                                      // Text("${e.name}",style: TextStyle(fontSize: 10),),
-                                                                                                                      Text("(${esp.sensorDistance.toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
-                                                                                                                    ],
-                                                                                                                  ),
-                                                                                                                  right: 2,
-                                                                                                                  top: 5,
-                                                                                                                ),
-                                                                                                                Positioned(
-                                                                                                                  child: Column(
-                                                                                                                    children: [
-                                                                                                                      Icon(Icons.sensors,color: Colors.blue,),
-                                                                                                                      // Text("${esp}",style: TextStyle(fontSize: 10),),
-                                                                                                                      Text("(0,0)",style: TextStyle(fontSize: 5),),
-                                                                                                                    ],
-                                                                                                                  ),
-                                                                                                                  right: 248,
-                                                                                                                  top: 5,
-                                                                                                                ),
-                                                                                                                Positioned(
-                                                                                                                  child: Column(
-                                                                                                                    children: [
-                                                                                                                      Stack(
-                                                                                                                        alignment: Alignment.center,
-                                                                                                                        children: [
-                                                                                                                          Container(
-                                                                                                                            width: 50,
-                                                                                                                            height: 50,
-                                                                                                                            decoration: new BoxDecoration(
-                                                                                                                              color: Colors.blue.withAlpha(100),
-                                                                                                                              shape: BoxShape.circle,
-                                                                                                                            ),
-                                                                                                                          ),
-                                                                                                                          Icon(Icons.place,color: Colors.blue,size: 15,),
-                                                                                                                        ],
-                                                                                                                      ),
-                                                                                                                      Text("${e.name}",style: TextStyle(fontSize: 10),),
-                                                                                                                      Text("(${(x).toStringAsFixed(2)},${(y).toStringAsFixed(2)})",style: TextStyle(fontSize: 5),),
-                                                                                                                    ],
-                                                                                                                  ),
-                                                                                                                  left:  (x.abs()*k).abs()<=0?-1*(x.abs()*k).abs():(x.abs()*k).abs()>k?k:(x.abs()*k).abs(),
-                                                                                                                  top: (y.abs()*k).abs()<=0?-1*(y.abs()*k).abs():(y.abs()*k).abs()>k?k:(y.abs()*k).abs(),
-                                                                                                                ),
-                                                                                                                // CustomPaint(
-                                                                                                                //   painter: LinePainter(),
-                                                                                                                // ),
-                                                                                                              ],
-                                                                                                            ),
+                                                                                                          Row(
+                                                                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                                                                            children: [
+                                                                                                              Text("Locating ",style: TextStyle(fontSize: 12,fontWeight: FontWeight.w100)),
+                                                                                                              Text(e.name,style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold),),
+                                                                                                            ],
+                                                                                                          ),
+
+                                                                                                          Lottie.network('https://assets3.lottiefiles.com/packages/lf20_tIKIYX.json',width: 100,height: 80),
+                                                                                                          StatefulBuilder(
+                                                                                                              builder: (context,loadingState) {
+                                                                                                                if(currentcount>=20){
+                                                                                                                  setLoadingState = null;
+                                                                                                                }
+                                                                                                                else{
+                                                                                                                  setLoadingState = loadingState;
+                                                                                                                }
+
+                                                                                                                return Row(
+                                                                                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                                                                                  children: [
+                                                                                                                    Text("${((currentcount/20)*100).round()}",style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold)),
+                                                                                                                    Text("%",style: TextStyle(fontSize: 15,fontWeight: FontWeight.w100)),
+                                                                                                                  ],
+                                                                                                                );
+                                                                                                              }
                                                                                                           ),
                                                                                                         ],
                                                                                                       ),
                                                                                                     ),
-                                                                                                    Padding(padding: EdgeInsets.only(top: 5)),
-                                                                                                    Row(
-                                                                                                      children: [
-                                                                                                        Expanded(child: CustomTextField(hint:"Edit Name", controller: tagName,enable: isEdit,color: Colors.white,filled: true,filledColor: Colors.blue.withAlpha(200),)),
-                                                                                                        CustomTextButton(
-                                                                                                          height: 50,
-                                                                                                          color: isEdit?Colors.indigo:Colors.blue,
-                                                                                                          text: isEdit?"Save":"Edit",
-                                                                                                          onPressed: (){
-                                                                                                            setState3((){
-                                                                                                              if(isEdit){
-                                                                                                                isEdit = false;
-                                                                                                                if(tagName.text.isNotEmpty){
-                                                                                                                  DBController.get(command:'update_tag_name' , data: {'id':e.id,'name':tagName.text}).then((value) {
-                                                                                                                    Navigator.of(context).pop();
-                                                                                                                  });
+                                                                                                  ),
+                                                                                                );
+                                                                                              }
+                                                                                              return Dialog(
+                                                                                                elevation: 0,
+                                                                                                backgroundColor: Colors.transparent,
+                                                                                                alignment: Alignment.center,
+                                                                                                child: SingleChildScrollView(
+                                                                                                  child: Column(
+                                                                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                                    children: [
+                                                                                                      Row(
+                                                                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                                                        children: [
+                                                                                                          Column(
+                                                                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                                            children: [
+                                                                                                              Text("Your",style:TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 10) ,),
+                                                                                                              Text("${e.name}",style:GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 25) ,),
+                                                                                                            ],
+                                                                                                          ),
+                                                                                                          StatefulBuilder(
+                                                                                                              builder: (context,updateDistance) {
+                                                                                                                updateCurrentDistance = updateDistance;
+                                                                                                                if(currentSelectedTagDistance<=.5){
+                                                                                                                  Vibrate.vibrate();
                                                                                                                 }
+                                                                                                                return Column(
+                                                                                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                                                  children: [
+                                                                                                                    Text("Distance From You",style:TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 10) ,),
+                                                                                                                    Text("${currentSelectedTagDistance.toStringAsFixed(3)}m",style:GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 25) ,),
+                                                                                                                  ],
+                                                                                                                );
+                                                                                                              }
+                                                                                                          ),
+                                                                                                        ],
+                                                                                                      ),
 
-                                                                                                              }else isEdit = true;
-                                                                                                            });
 
-                                                                                                          },
+                                                                                                      Container(
+                                                                                                        height: 330,
+                                                                                                        width: double.infinity,
+                                                                                                        decoration: BoxDecoration(
+                                                                                                            color: Colors.white,
+                                                                                                            borderRadius: BorderRadius.all(Radius.circular(20))
                                                                                                         ),
-                                                                                                      ],
-                                                                                                    ),
-                                                                                                    CustomTextButton(
-                                                                                                      width: double.infinity,
-                                                                                                      height: 50,
-                                                                                                      color: Colors.indigo,
-                                                                                                      text: "Found Tag",
-                                                                                                      onPressed: (){
-                                                                                                        Log log = Log(left: e.left,right: e.right,date: "",roomID: room.id,userID: widget.user.id.toString(),status: "Tag ${e.name} is found!");
-                                                                                                        DBController.get(command: "add_log", data: log.tojson()).then((value) {
-                                                                                                          setState((){
-                                                                                                            Navigator.of(context).pop();
+                                                                                                        child: Column(
+
+                                                                                                          children: [
+                                                                                                            Expanded(
+                                                                                                              child: Stack(
+                                                                                                                children: [
+                                                                                                                  Positioned(
+                                                                                                                    child: Column(
+                                                                                                                      children: [
+                                                                                                                        Icon(Icons.sensors,color: Colors.blue,),
+                                                                                                                        // Text("${e.name}",style: TextStyle(fontSize: 10),),
+                                                                                                                        Text("(${(esp.sensorDistance*2).toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
+                                                                                                                      ],
+                                                                                                                    ),
+                                                                                                                    right: 2,
+                                                                                                                    top: 5,
+                                                                                                                  ),
+                                                                                                                  Positioned(
+                                                                                                                    child: Column(
+                                                                                                                      children: [
+                                                                                                                        Icon(Icons.sensors,color: Colors.blue,),
+                                                                                                                        // Text("${esp}",style: TextStyle(fontSize: 10),),
+                                                                                                                        Text("(0,0)",style: TextStyle(fontSize: 5),),
+                                                                                                                      ],
+                                                                                                                    ),
+                                                                                                                    right: 248,
+                                                                                                                    top: 5,
+                                                                                                                  ),
+                                                                                                                  Positioned(
+                                                                                                                    child: Column(
+                                                                                                                      children: [
+                                                                                                                        Stack(
+                                                                                                                          alignment: Alignment.center,
+                                                                                                                          children: [
+                                                                                                                            Container(
+                                                                                                                              width: 50,
+                                                                                                                              height: 50,
+                                                                                                                              decoration: new BoxDecoration(
+                                                                                                                                color: Colors.blue.withAlpha(100),
+                                                                                                                                shape: BoxShape.circle,
+                                                                                                                              ),
+                                                                                                                            ),
+                                                                                                                            Icon(Icons.place,color: Colors.blue,size: 15,),
+                                                                                                                          ],
+                                                                                                                        ),
+                                                                                                                        Text("${e.name}",style: TextStyle(fontSize: 10),),
+                                                                                                                        Text("(${(x).toStringAsFixed(2)},${(y).toStringAsFixed(2)})",style: TextStyle(fontSize: 5),),
+                                                                                                                      ],
+                                                                                                                    ),
+                                                                                                                    left:  (x.abs()*k).abs()<=0?-1*(x.abs()*k).abs():(x.abs()*k).abs()>k?k:(x.abs()*k).abs(),
+                                                                                                                    top: (y.abs()*k).abs()<=0?-1*(y.abs()*k).abs():(y.abs()*k).abs()>k?k:(y.abs()*k).abs(),
+                                                                                                                  ),
+                                                                                                                  // CustomPaint(
+                                                                                                                  //   painter: LinePainter(),
+                                                                                                                  // ),
+                                                                                                                ],
+                                                                                                              ),
+                                                                                                            ),
+                                                                                                          ],
+                                                                                                        ),
+                                                                                                      ),
+                                                                                                      Padding(padding: EdgeInsets.only(top: 5)),
+                                                                                                      Row(
+                                                                                                        children: [
+                                                                                                          Expanded(child: CustomTextField(hint:"Edit Name", controller: tagName,enable: isEdit,color: Colors.white,filled: true,filledColor: Colors.blue.withAlpha(200),)),
+                                                                                                          CustomTextButton(
+                                                                                                            height: 50,
+                                                                                                            color: isEdit?Colors.indigo:Colors.blue,
+                                                                                                            text: isEdit?"Save":"Edit",
+                                                                                                            onPressed: (){
+                                                                                                              setState3((){
+                                                                                                                if(isEdit){
+                                                                                                                  isEdit = false;
+                                                                                                                  if(tagName.text.isNotEmpty){
+                                                                                                                    DBController.get(command:'update_tag_name' , data: {'id':e.id,'name':tagName.text}).then((value) {
+                                                                                                                      Navigator.of(context).pop();
+                                                                                                                    });
+                                                                                                                  }
+
+                                                                                                                }else isEdit = true;
+                                                                                                              });
+
+                                                                                                            },
+                                                                                                          ),
+                                                                                                        ],
+                                                                                                      ),
+                                                                                                      CustomTextButton(
+                                                                                                        width: double.infinity,
+                                                                                                        height: 50,
+                                                                                                        color: Colors.indigo,
+                                                                                                        text: "Found Tag",
+                                                                                                        onPressed: (){
+                                                                                                          Log log = Log(left: e.left,right: e.right,date: "",roomID: room.id,userID: widget.user.id.toString(),status: "Tag ${e.name} is found!");
+                                                                                                          DBController.get(command: "add_log", data: log.tojson()).then((value) {
+                                                                                                            setState((){
+                                                                                                              Navigator.of(context).pop();
+                                                                                                            });
                                                                                                           });
-                                                                                                        });
 
-                                                                                                      },
-                                                                                                    ),
-                                                                                                  ],
+                                                                                                        },
+                                                                                                      ),
+                                                                                                    ],
+                                                                                                  ),
                                                                                                 ),
-                                                                                              ),
-                                                                                            );
-                                                                                          }
-                                                                                      )
+                                                                                              );
+                                                                                            }
+                                                                                        )
 
-                                                                                  );
-                                                                                },
-                                                                                child: Expanded(
+                                                                                    );
+                                                                                  },
                                                                                   child: Row(
                                                                                     children: [
                                                                                       if(!inRange)
