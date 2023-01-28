@@ -45,35 +45,42 @@ def tag_pos(a, b, c,id):
     cos_a = (((b * b) + (c*c) - (a * a))) / (2 * b * c)
     x = b * cos_a
     y = b * cmath.sqrt(1 - (cos_a * cos_a))
-    # for tagwd in tagsWithRDistance:
-    #     if tagwd['id'] == id:
-    #         isRecorded = True
-    #         break
+    for tagwd in tagsWithRDistance:
+        if tagwd['id'] == id:
+            isRecorded = True
+            break
 
-    # if isRecorded:
-    #     for tag in tagsWithRDistance:
-    #         if tag['id'] == id:
-    #             xTotal = 0
-    #             yTotal = 0
-    #             xAVG = 0
-    #             yAVG = 0
-    #             for xv in tag['x']:
-    #                 xTotal+=xv
-    #             for yv in tag['y']:
-    #                 yTotal+=yv
-    #             xAVG = xTotal/len(tag['x'])
-    #             yAVG = yTotal/len(tag['y'])
-    #             tag['x'].append(x)
-    #             tag['y'].append(y)
-    #             return {'x':round(xAVG.real, 2), 'y':round(yAVG.real, 2)}
+    if isRecorded:
+        for tag in tagsWithRDistance:
+            if tag['id'] == id:
+                xTotal = 0
+                yTotal = 0
+                xAVG = 0
+                yAVG = 0
+                for xv in tag['x']:
+                    xTotal+=xv
+                for yv in tag['y']:
+                    yTotal+=yv
+                xAVG = xTotal/len(tag['x'])
+                yAVG = yTotal/len(tag['y'])
+                if len(tag['x'])>10 and len(tag['y'])>10:
+                    tag['x'].append(x)
+                    tag['x'].pop(0)
+                    tag['y'].append(y)
+                    tag['y'].pop(0)
+                    
+                else:
+                    tag['x'].append(x)
+                    tag['y'].append(y)
+                return {'x':round(xAVG.real, 2), 'y':round(yAVG.real, 2)}
                 
-    #     pass
-    # else:
-    #     tagsWithRDistance.append({
-    #         'id':id,
-    #         'x':[x,],
-    #         'y':[y,]
-    #     })
+        pass
+    else:
+        tagsWithRDistance.append({
+            'id':id,
+            'x':[x,],
+            'y':[y,]
+        })
     
     return {'x':round(x.real, 2), 'y':round(y.real, 2)}
 @app.route("/get_offline" , methods=["GET","POST"])
@@ -105,22 +112,23 @@ def getTagPos():
         a = tag['distance_left']
         b = tag['distance_right']
         pos = tag_pos(a,b,(c),tag['id'])
-        return {'left':a,'right':b,'len':20}
-        # for x in tagsWithRDistance:
-        #     if x['id'] == tag['id']:
-        #         print(len(x['x']))
-        #         if len(x['x'])>=20:
-        #             return pos
-        #         if len(x['x'])>=35:
-        #             # resetTagPosHalf(tagID)
-        #             pass
-        #         break
+        # return pos
+        # return {'left':a,'right':b,'len':20}
+        for x in tagsWithRDistance:
+            if x['id'] == tag['id']:
+                print(len(x['x']))
+                if len(x['x'])>=10:
+                    return pos
+                if len(x['x'])>=35:
+                    # resetTagPosHalf(tagID)
+                    pass
+                break
         
-        # return {"x":-1.0,'y':-1.0,'len':len(x['x'])}
+        return {"x":-1.0,'y':-1.0,'len':len(x['x'])}
     except:
         filtered_distances = kalman_filter(espDistances,A=1, H=1, Q=1.6, R=6)
         print(len(espDistances))
-        if len(espDistances)>20:
+        if len(espDistances)>10:
             total = 0
             for x in espDistances:
                 total+=x
@@ -137,14 +145,15 @@ def getTagPos():
         b = tag['distance_right']
 
         pos = tag_pos(a,b,(c),tag['id'])
-        return {'left':a,'right':b,'len':20}
-        # for x in tagsWithRDistance:
-        #     if x['id'] == tag['id']:
-        #         if len(x['x'])>=20:
-        #             return pos
-        #         break
+        # return pos
+        # return {'left':a,'right':b,'len':20}
+        for x in tagsWithRDistance:
+            if x['id'] == tag['id']:
+                if len(x['x'])>=10:
+                    return pos
+                break
         
-        # return {"x":-1.0,'y':-1.0,'len':len(x['x'])}
+        return {"x":-1.0,'y':-1.0,'len':len(x['x'])}
 
 @app.route("/get_logs" , methods=["GET","POST"])
 def getLogs():
@@ -283,8 +292,8 @@ def getTagWhereUserID():
     if tagsJs==None:return []
     return tags
 
-@app.route("/upsert_tag/<address>/<name>/<distance>/<espID>",methods=["GET"])
-def upsertTag(address,name,distance,espID):
+@app.route("/upsert_tag/<address>/<name>/<distance>/<espID>/<txpower>",methods=["GET"])
+def upsertTag(address,name,distance,espID,txpower):
     id = address
     # print(id)
     distance = distance.split('(-)')
@@ -292,6 +301,8 @@ def upsertTag(address,name,distance,espID):
     distance = distance[0]
     r_distance = 0
     l_distance = 0
+    txpower_l = 0
+    txpower_r = 0
     current_time = datetime.datetime.now()
     # if position == "right": 
     #     r_distance = float(distance)
@@ -300,7 +311,7 @@ def upsertTag(address,name,distance,espID):
     #     l_distance = float(distance)
     #     tag = Tag(name=name,id=id,distance_left=float(distance),distance_right="na",espID=espID)
     # tag.upsertUser()
-
+    print(txpower_l)
     try:
         
         for tg in tags:
@@ -308,40 +319,58 @@ def upsertTag(address,name,distance,espID):
                 this_tag = tg
                 break
         # print(tags.index(this_tag))
-        if len(this_tag['distance_left'])>50:
+        if len(this_tag['distance_left'])>11 and len(this_tag['distance_right'])>11:
             if position=='left' and distance!='na':
-                this_tag['distance_left'][-1] = float(distance)
+                this_tag['distance_left'].append(int(distance)) 
+                this_tag['distance_left'].pop(0) 
+                txpower_l = txpower
             if position=='right' and distance!='na':
-                this_tag['distance_right'][-1] = float(distance)
-            
+                txpower_r = txpower
+                this_tag['distance_right'].append(int(distance)) 
+                this_tag['distance_right'].pop(0) 
         else:
-           
+            
             if position=='left' and distance!='na':
-                this_tag['distance_left'].append(float(distance))
+                txpower_l = txpower
+                this_tag['distance_left'].append(int(distance))
             if position=='right' and distance!='na':
-                this_tag['distance_right'].append(float(distance))
-        print(len(tags))
-        if len(this_tag['distance_left'])>10 and len(this_tag['distance_right'])>10:
+                txpower_r = txpower
+                this_tag['distance_right'].append(int(distance))
+
+        
+        if len(this_tag['distance_left'])>5 and len(this_tag['distance_right'])>5:
+
             filtered_distance_left = kalman_filter(this_tag['distance_left'][1:],A=1, H=1, Q=1.6, R=6)
             filtered_distance_right = kalman_filter(this_tag['distance_right'][1:],A=1, H=1, Q=1.6, R=6)
             # filtered_distance_left = gray_filter(this_tag['distance_left'][1:],N=len(this_tag['distance_left']))
             # filtered_distance_right = gray_filter(this_tag['distance_right'][1:],N=len(this_tag['distance_right']))
-            filtered_distance_left_particle = particle_filter(filtered_distance_left,A=1, H=1, Q=1.6, R=6,quant_particles=100)
-            filtered_distance_right_particle = particle_filter(filtered_distance_right,A=1, H=1, Q=1.6, R=6,quant_particles=100)
+            # filtered_distance_left_particle = particle_filter(filtered_distance_left,A=1, H=1, Q=1.6, R=6,quant_particles=100)
+            # filtered_distance_right_particle = particle_filter(filtered_distance_right,A=1, H=1, Q=1.6, R=6,quant_particles=100)
             total_a = 0
             total_b = 0
-            for x in filtered_distance_left_particle:
+            for x in filtered_distance_left:
                 total_a+=x
-            for y in filtered_distance_right_particle:
+            for y in filtered_distance_right:
                 total_b+=y
-
-            avg_a = round(total_a/len(filtered_distance_left_particle),2)
-            avg_b = round(total_b/len(filtered_distance_right_particle),2)
             
-            distance_a = round(pow(10,((avg_a) - (filtered_distance_left_particle[-1]))/(10*2.5)),2)
-            distance_b = round(pow(10,((avg_b) - (filtered_distance_right_particle[-1]))/(10*2.5)),2)
-        #     # print(filtered_distance_left)
-        #     # print(filtered_distance_right)
+            avg_a = round(total_a/len(filtered_distance_left),2)
+            avg_b = round(total_b/len(filtered_distance_right),2)
+            
+            distance_a = round(pow(10,((int(avg_a)) - (filtered_distance_left[-1]))/(10*2.5)),3)
+            distance_b = round(pow(10,((int(avg_b)) - (filtered_distance_right[-1]))/(10*2.5)),3)
+
+            
+
+            # print("left = "+str(distance_a))
+            # print("right = "+str(distance_b))
+
+            # print("not filtered left = "+str(r_d_a))
+            # print("not filtered right = "+str(l_d_b))
+            # print("Filtered left ="+str(filtered_distance_left))
+            # print("Filtered right ="+str(filtered_distance_right))
+
+            # print("unFiltered left ="+str(this_tag['distance_left'][1:]))
+            # print("unFiltered right ="+str(this_tag['distance_right'][1:]))
         #     # tagDB.update({'distance_right':distance_b,'distance_left':distance_a},where('id')==id)
             if tagDBJS.find_one({'id':id}) == None:
                 print(id)
@@ -358,12 +387,12 @@ def upsertTag(address,name,distance,espID):
             else:
                 tagDBJS.update_one({'id':id},{'$set':{'distance_right':distance_b,'distance_left':distance_a,'date_update':current_time,}})
     except:
+        print("asdsad")
         tags.append(
             {
                 'id':id,
                 'distance_left':[l_distance],
                 'distance_right':[r_distance]
-                    
             }
         )
     return "1"
@@ -425,18 +454,21 @@ def updateESP32Mode(id,mode):
 
 @app.route("/update_esp32_distance/<id>/<distance>",methods=["GET","POST"])
 def updateESPDistance(id,distance):
-    if len(espDistances)<100:
+    if len(espDistances)<50:
         espDistances.append(float(distance))
-    else :espDistances[-1] = float(distance)
+        
+    else :
+        espDistances.append(float(distance))
+        espDistances.pop(0)
     # test = [-65,-56,-72,-50,-55]
     filtered_distances = kalman_filter(espDistances,A=1, H=1, Q=1.6, R=6)
     print(len(espDistances))
-    if len(espDistances)>10:
+    if len(filtered_distances)>5:
         total = 0
-        for x in espDistances:
+        for x in filtered_distances:
             total+=x
-        avg = round(total/len(espDistances),2)
-        distance = round(pow(10,((avg) - (filtered_distances[-1]))/(10*2.5)),3)
+        avg = round(total/len(filtered_distances),2)
+        distance = round(pow(10,((-66) - (filtered_distances[-1]))/(10*2.4)),3)
         esp32PairDBJS.update_one({'id':id},{'$set':{'distance':distance}})
 
     else: esp32PairDBJS.update_one({'id':id},{'$set':{'distance':0.0}})

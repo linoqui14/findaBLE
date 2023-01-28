@@ -18,7 +18,7 @@ const char* ssid = "GlobeAtHome_9FA0E";
 const char* password = "BJHETEQR0R0";
 
 // String serverName = "https://findable.onrender.com/";
-String serverName = "http://192.168.254.100:5000/";
+String serverName = "http://192.168.254.106:5000/";
 TaskHandle_t requestTask;
 int scanTime = 5; //In seconds
 BLEScan* pBLEScan;
@@ -150,7 +150,7 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
                 position = "right";
               }
               
-                String serverPath = serverName + "upsert_tag/"+advertisedDevice.getAddress().toString().c_str()+"/"+name+"/"+String(rssi)+"(-)"+position+"/"+String(pairID);
+                String serverPath = serverName + "upsert_tag/"+advertisedDevice.getAddress().toString().c_str()+"/"+name+"/"+String(rssi)+"(-)"+position+"/"+String(pairID)+"/"+advertisedDevice.getTXPower();
                 Serial.println(serverPath);     
                 http.begin(serverPath.c_str());
                 int httpResponseCode = http.GET();

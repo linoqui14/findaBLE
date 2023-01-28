@@ -20,8 +20,8 @@ class Constants{
 }
 
 class DBController{
-  // static String ip = "192.168.1.6";
-  static String ip = "https://findable.onrender.com";
+  static String ip = "http://192.168.254.106:5000/";
+  // static String ip = "https://findable.onrender.com";
   static String code = "123556";
   static Future<bool> testConnection() async{
     String phpurl = "$ip/is_connected";

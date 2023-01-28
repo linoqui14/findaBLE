@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-
+import 'package:app_settings/app_settings.dart';
 import 'package:findable/my_widgets/custom_text_button.dart';
 import 'package:findable/my_widgets/custom_textfield.dart';
 import 'package:findable/pages/login.dart';
@@ -21,7 +21,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:lottie/lottie.dart';
-
+import 'package:fluttertoast/fluttertoast.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({Key? key, required this.user}) : super(key: key);
@@ -50,6 +50,26 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
   void initState() {
     super.initState();
 
+    checkBT(){
+      flutterBlue.isOn.then((value) {
+        if(!value){
+          Fluttertoast.showToast(
+              msg: "Please Turn On Bluetooth and GPS.",
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.CENTER,
+              timeInSecForIosWeb: 1,
+              backgroundColor: Colors.red,
+              textColor: Colors.white,
+              fontSize: 16.0
+          );
+          AppSettings.openBluetoothSettings().then((value) {
+            // checkBT();
+          });
+        }
+      });
+    }
+
+    checkBT();
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'findable',
       'findable-tag',
@@ -83,7 +103,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                 });
                 DBController.get(command: "get_esp32/${tag.espID}", data: {}).then((value) {
                   ESP esp = ESP.toObject(jsonDecode(value!));
-                  double k = 250/(esp.sensorDistance*2);
+                  double k = 250/(esp.sensorDistance);
                   double x=-1,y=-1;
                   int currentcount = 0;
                   late Function(Function()) setStateMap;
@@ -147,7 +167,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                         Lottie.network('https://assets3.lottiefiles.com/packages/lf20_tIKIYX.json',width: 100,height: 80),
                                         StatefulBuilder(
                                             builder: (context,loadingState) {
-                                              if(currentcount>=20){
+                                              if(currentcount>=10){
                                                 setLoadingState = null;
                                               }
                                               else{
@@ -357,7 +377,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                 String date = jsonDecode(value!)['date_update'];
                 DBController.get(command: 'get_esp32/'+e.espID, data: {}).then((esp_res) {
                   ESP esp = ESP.toObject(jsonDecode(esp_res!));
-                  double k = 250/(esp.sensorDistance*2);
+                  double k = 250/(esp.sensorDistance);
                   double x=0,y=0;
                   DBController.get(command: "get_tag_pos", data: {'tagID':e.id.toLowerCase()}).then((value){
 
@@ -406,7 +426,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                       children: [
                                                         Icon(Icons.sensors,color: Colors.blue,),
                                                         Text("${e.name}",style: TextStyle(fontSize: 10),),
-                                                        Text("(${(esp.sensorDistance*2).toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
+                                                        Text("(${(esp.sensorDistance).toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
                                                       ],
                                                     ),
                                                     right: 2,
@@ -420,7 +440,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                         Text("(0,0)",style: TextStyle(fontSize: 5),),
                                                       ],
                                                     ),
-                                                    right: 248,
+                                                    right: MediaQuery. of(context). size. width*.73,
                                                     top: 5,
                                                   ),
                                                   Positioned(
@@ -480,7 +500,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
 
 
     Permission.bluetooth.request().then((bt) {
-
+      print(bt.isGranted.toString()+"ASDasddwe23123123123");
       if(bt.isGranted){
         Permission.bluetoothConnect.request().then((btconnect) {
           if(btconnect.isGranted){
@@ -504,9 +524,15 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
 
       Future.delayed(Duration(seconds: 3), () {
         flutterBlue.startScan();
+        flutterBlue.scanResults.length.then((value) {
+          print(value.toString()+"ASdasdsadasasdasdasd");
+        });
 
-
-
+        // flutterBlue.scanResults.forEach((element) {
+        //   element.forEach((elementd) {
+        //     print(elementd.device.name);
+        //   });
+        // });
         flutterBlue.scanResults.first.then((element) {
           // print(tagsDevice.length);
           int tagCount = 0;
@@ -935,13 +961,13 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                     Room room = Room.toObject(jsonDecode(roomJSON!));
                                                                     DBController.get(command: 'get_esp32/'+room.esp32ID, data: {}).then((esp_res) {
                                                                       ESP esp = ESP.toObject(jsonDecode(esp_res!));
-                                                                      double k = 250/(esp.sensorDistance*2);
+                                                                      double k = 250/(esp.sensorDistance);
                                                                       double x=0,y=0;
 
 
                                                                       double a = log.left;
                                                                       double b = log.right;
-                                                                      double c = (esp.sensorDistance*2);
+                                                                      double c = (esp.sensorDistance);
                                                                       double cos_a = ((pow(b,2)+pow(c,2))-pow(a,2))/(2*b*c);
                                                                       x = b * cos_a;
                                                                       y = (b * sqrt((1-pow(cos_a,2)).abs()));
@@ -987,7 +1013,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                                                         children: [
                                                                                                           Icon(Icons.sensors,color: Colors.blue,),
                                                                                                           // Text("${e.name}",style: TextStyle(fontSize: 10),),
-                                                                                                          Text("(${(esp.sensorDistance*2).toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
+                                                                                                          Text("(${(esp.sensorDistance).toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
                                                                                                         ],
                                                                                                       ),
                                                                                                       right: 2,
@@ -1199,7 +1225,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                         if(esp.sensorDistance<=0)
                                                                           CircularProgressIndicator(color: Colors.indigo,),
                                                                         if(esp.sensorDistance>0)
-                                                                          Text((esp.sensorDistance*2).toStringAsPrecision(2)+"m",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 13),),
+                                                                          Text((esp.sensorDistance).toStringAsPrecision(2)+"m",style: GoogleFonts.nunitoSans(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 13),),
                                                                       ],
                                                                     ),
 
@@ -1258,7 +1284,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                                     });
                                                                                     TextEditingController tagName = TextEditingController(text: e.name);
                                                                                     bool isEdit = false;
-                                                                                    double k = 250/(esp.sensorDistance*2);
+                                                                                    double k = 250/(esp.sensorDistance);
                                                                                     double x=-1,y=-1;
 
                                                                                     int currentcount = 0;
@@ -1284,15 +1310,15 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                                           setStateMap((){
                                                                                             print(value);
                                                                                             print("asdasdasdaasasdasdasdas");
-                                                                                            double a =json['left'];
-                                                                                            double b =json['right'];
-                                                                                            double c = (esp.sensorDistance*2);
-                                                                                            double cos_a = ((pow(b,2)+pow(c,2))-pow(a,2))/(2*b*c);
-                                                                                            x = b * cos_a;
-                                                                                            y = (b * sqrt((1-pow(cos_a,2)).abs()));
+                                                                                            // double a =json['left'];
+                                                                                            // double b =json['right'];
+                                                                                            // double c = (esp.sensorDistance);
+                                                                                            // double cos_a = ((pow(b,2)+pow(c,2))-pow(a,2))/(2*b*c);
+                                                                                            // x = b * cos_a;
+                                                                                            // y = (b * sqrt((1-pow(cos_a,2)).abs()));
 
-                                                                                            // x = json['x'];
-                                                                                            // y = json['y'];
+                                                                                            x = json['x'];
+                                                                                            y = json['y'];
 
                                                                                             getPos();
                                                                                             // print(x);
@@ -1339,7 +1365,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                                                           Lottie.network('https://assets3.lottiefiles.com/packages/lf20_tIKIYX.json',width: 100,height: 80),
                                                                                                           StatefulBuilder(
                                                                                                               builder: (context,loadingState) {
-                                                                                                                if(currentcount>=20){
+                                                                                                                if(currentcount>=10){
                                                                                                                   setLoadingState = null;
                                                                                                                 }
                                                                                                                 else{
@@ -1417,7 +1443,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                                                                       children: [
                                                                                                                         Icon(Icons.sensors,color: Colors.blue,),
                                                                                                                         // Text("${e.name}",style: TextStyle(fontSize: 10),),
-                                                                                                                        Text("(${(esp.sensorDistance*2).toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
+                                                                                                                        Text("(${(esp.sensorDistance).toStringAsFixed(2)},0)",style: TextStyle(fontSize: 5),),
                                                                                                                       ],
                                                                                                                     ),
                                                                                                                     right: 2,
@@ -1431,7 +1457,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                                                                         Text("(0,0)",style: TextStyle(fontSize: 5),),
                                                                                                                       ],
                                                                                                                     ),
-                                                                                                                    right: 248,
+                                                                                                                    right:MediaQuery. of(context). size. width*.72,
                                                                                                                     top: 5,
                                                                                                                   ),
                                                                                                                   Positioned(
@@ -1441,8 +1467,8 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                                                                           alignment: Alignment.center,
                                                                                                                           children: [
                                                                                                                             Container(
-                                                                                                                              width: 50,
-                                                                                                                              height: 50,
+                                                                                                                              width: 75,
+                                                                                                                              height: 75,
                                                                                                                               decoration: new BoxDecoration(
                                                                                                                                 color: Colors.blue.withAlpha(100),
                                                                                                                                 shape: BoxShape.circle,
@@ -1456,7 +1482,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                                                                                                       ],
                                                                                                                     ),
                                                                                                                     left:  (x.abs()*k).abs()<=0?-1*(x.abs()*k).abs():(x.abs()*k).abs()>k?k:(x.abs()*k).abs(),
-                                                                                                                    top: (y.abs()*k).abs()<=0?-1*(y.abs()*k).abs():(y.abs()*k).abs()>k?k:(y.abs()*k).abs(),
+                                                                                                                    top:  (y.abs()*k).abs()<=0?-1*(y.abs()*k).abs():(y.abs()*k).abs()>k?k:(y.abs()*k).abs(),
                                                                                                                   ),
                                                                                                                   // CustomPaint(
                                                                                                                   //   painter: LinePainter(),
